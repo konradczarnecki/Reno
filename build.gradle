@@ -1,0 +1,44 @@
+buildscript {
+	ext {
+		springBootVersion = '1.5.9.RELEASE'
+	}
+	repositories {
+		mavenCentral()
+
+	}
+	dependencies {
+		classpath("org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}")
+	}
+}
+
+apply plugin: 'java'
+apply plugin: 'eclipse'
+apply plugin: 'org.springframework.boot'
+
+group = 'konra'
+version = '0.0.1-SNAPSHOT'
+sourceCompatibility = 1.8
+
+repositories {
+	mavenCentral()
+}
+
+
+dependencies {
+//	compile('org.springframework.boot:spring-boot-starter-data-mongodb')
+	compile('org.springframework.boot:spring-boot-starter-web')
+	testCompile('org.springframework.boot:spring-boot-starter-test')
+//	testCompile('de.flapdoodle.embed:de.flapdoodle.embed.mongo')
+	compile fileTree(dir: 'libs', include: '*.jar')
+	compile fileTree(dir: 'libs/lib', include: '*.jar')
+	compile('com.offbynull.portmapper:portmapper:2.0.5')
+	compile group: 'commons-codec', name: 'commons-codec', version: '1.9'
+}
+
+
+task renoCli(type: Exec){
+	group 'application'
+	workingDir "${project.buildDir}/classes/main/konra/reno/cli"
+	executable 'java'
+	args = ["Cli"]
+}
