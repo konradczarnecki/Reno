@@ -17,7 +17,7 @@ public class Block implements Serializable {
     private List<Transaction> transactions;
     private String previousPOW;
     private int difficulty;
-    private String POW;
+    private String pow;
 
     public Block() {
 
@@ -32,7 +32,7 @@ public class Block implements Serializable {
         id = previousBlock.id + 1;
         difficulty = 3;
         transactions = new ArrayList<>();
-        previousPOW = previousBlock.POW;
+        previousPOW = previousBlock.pow;
     }
 
     public String hash(){
@@ -48,11 +48,9 @@ public class Block implements Serializable {
     public static boolean verify(Block block, String prevPOW){
 
         String hash = block.hash();
-
-//        log.info(block.toString());
-//        log.info(prevPOW);
         if(!hash.equals(block.getPOW())) return false;
-        log.info("pow matches");
+        log.debug("pow matches");
+
         if(block.getId() > 2 && !block.getPreviousPOW().equals(prevPOW)) return false;
         return verifyPOW(block, hash);
     }
@@ -82,11 +80,11 @@ public class Block implements Serializable {
     }
 
     public String getPOW() {
-        return POW;
+        return pow;
     }
 
     public void setPOW(String POW) {
-        this.POW = POW;
+        this.pow = POW;
     }
 
     public int getDifficulty() {
@@ -106,7 +104,11 @@ public class Block implements Serializable {
     }
 
     public String toString(){
-        return this.id + ".   " + this.transactions.hashCode() + " --- prevBlock: " + this.previousPOW +
-                " --- pow: " + this.POW;
+
+        return "\n----------------\nBlock " + id + "\n" +
+                "Transactions: " + transactions.size() + "\n" +
+                "POW:          " + pow + "\n" +
+                "Previous POW: " + previousPOW + "\n" +
+                "---------------\n";
     }
 }

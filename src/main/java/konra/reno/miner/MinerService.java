@@ -44,20 +44,17 @@ public class MinerService {
 
         exec = exec == null ? Executors.newScheduledThreadPool(10) : exec;
 
-        log.info("started mining");
         LinkedList<Block> blockchain = fileService.readBlockchain();
         Block lastBlock = blockchain.getLast();
         Block newBlock = new Block(lastBlock);
-
-        log.info(newBlock.toString());
 
         Runnable mine = () -> {
 
              Block verified = mineBlock(newBlock);
              if(verified != null){
 
-                 boolean r = core.addBlock(verified);
-                 log.info("Mined block {} - pow: {}", verified.getId(), verified.getPOW());
+                 if(core.addBlock(verified))
+                    log.info("Block mined." + verified.toString());
              }
 
              startMining();
@@ -75,7 +72,7 @@ public class MinerService {
 
     public Block mineBlock(Block raw){
 
-        log.info("started mining");
+        log.info("Mining block {}...", raw.getId());
 
         for(long n = 0; n < Long.MAX_VALUE-1; n++){
 
@@ -84,7 +81,6 @@ public class MinerService {
 
             if(Block.verifyPOW(raw, hash)) {
 
-                log.info("block found");
                 raw.setPOW(hash);
                 return raw;
             }

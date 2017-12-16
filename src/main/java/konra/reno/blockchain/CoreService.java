@@ -108,7 +108,7 @@ public class CoreService {
         return true;
     }
 
-    public boolean verifyBlockchain(StringBuffer sb){
+    public boolean verifyBlockchain(StringBuilder sb){
 
         boolean verified = true;
         LinkedList<Block> blockchain = fileService.readBlockchain();
@@ -121,7 +121,12 @@ public class CoreService {
                 break;
             }
 
-            if(sb != null) sb.append(b.toString() + "\n");
+            log.info(b.toString());
+            if(sb != null){
+                sb.append(b.toString());
+                sb.append("\n");
+            }
+
             prevPOW = b.getPOW();
         }
 
@@ -130,21 +135,19 @@ public class CoreService {
 
     public boolean addBlock(Block block){
 
-//        p2p.downloadFile("blockchain");
+        p2p.downloadFile("blockchain");
         LinkedList<Block> blockchain = fileService.readBlockchain();
 
-        log.info("Blockchain read  size: " + blockchain.size());
         String prevPOW = blockchain.getLast().getPOW();
 
-        log.info("" + prevPOW + ":" + block.getPreviousPOW());
         if(!Block.verify(block, prevPOW)) return false;
 
-        log.info("passed verification");
+        log.debug("passed verification");
         blockchain.add(block);
         fileService.writeBlockchain(blockchain);
-//        p2p.updateFile("blockchain");
+        p2p.updateFile("blockchain");
 
-        log.info("blockchain written");
+        log.debug("Block added.");
 
         return true;
     }

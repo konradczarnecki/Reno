@@ -5,20 +5,14 @@ import org.hive2hive.core.api.H2HNode;
 import org.hive2hive.core.api.configs.FileConfiguration;
 import org.hive2hive.core.api.configs.NetworkConfiguration;
 import org.hive2hive.core.api.interfaces.*;
-import org.hive2hive.core.exceptions.NoPeerConnectionException;
-import org.hive2hive.core.exceptions.NoSessionException;
 import org.hive2hive.processframework.ProcessState;
-import org.hive2hive.processframework.exceptions.InvalidProcessStateException;
-import org.hive2hive.processframework.exceptions.ProcessExecutionException;
 import org.hive2hive.processframework.interfaces.IProcessComponent;
 import org.hive2hive.core.security.UserCredentials;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
-import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 
@@ -177,7 +171,7 @@ public class P2PService {
         return true;
     }
 
-    public boolean downloadFile(String name){
+    public void downloadFile(String name){
 
         IFileManager fileManager = node.getFileManager();
         File file = new File(new FileAgent().getRoot(), name);
@@ -188,10 +182,7 @@ public class P2PService {
 
         } catch (Exception e) {
 
-//            e.printStackTrace();
         }
-
-        return true;
     }
 
     public boolean checkProgress(){

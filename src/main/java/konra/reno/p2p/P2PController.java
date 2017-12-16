@@ -59,6 +59,7 @@ public class P2PController {
     @GetMapping("/download-file")
     public Response downloadFile(@RequestParam(name = "name") String name){
 
-        return service.downloadFile(name) ? Response.success() : Response.failure();
+        service.downloadFile(name);
+        return  Response.success();
     }
 }

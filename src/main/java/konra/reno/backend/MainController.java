@@ -24,7 +24,7 @@ public class MainController {
 
 //        service.downloadBlockchain();
 
-        StringBuffer sb = debug.equals("yes") ? new StringBuffer() : null;
+        StringBuilder sb = debug.equals("yes") ? new StringBuilder() : null;
         boolean result = service.verifyBlockchain(sb);
 
         Response<String> rsp = new Response<>();
