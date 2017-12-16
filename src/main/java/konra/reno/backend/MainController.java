@@ -1,8 +1,8 @@
 package konra.reno.backend;
 
-import konra.reno.Crypto;
-import konra.reno.KeysDto;
-import konra.reno.Response;
+import konra.reno.util.Crypto;
+import konra.reno.util.KeysDto;
+import konra.reno.util.Response;
 import konra.reno.blockchain.CoreService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;

@@ -1,6 +1,7 @@
 package konra.reno.blockchain;
 
-import konra.reno.Crypto;
+import konra.reno.util.Crypto;
+import konra.reno.transaction.Transaction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

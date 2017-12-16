@@ -1,7 +1,7 @@
 package konra.reno;
 
 import konra.reno.blockchain.Block;
-import konra.reno.blockchain.FileService;
+import konra.reno.util.FileService;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

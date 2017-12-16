@@ -1,4 +1,4 @@
-package konra.reno;
+package konra.reno.util;
 
 import org.apache.commons.codec.binary.Base64;
 import org.springframework.stereotype.Service;
@@ -91,6 +91,11 @@ public class Crypto {
         cipher.init(Cipher.DECRYPT_MODE, privateKey);
 
         return new String(cipher.doFinal(encrypted));
+    }
+
+    public String signB64(byte[] hash){
+
+
     }
 
     public static byte[] hash(String original){

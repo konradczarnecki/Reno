@@ -1,4 +1,4 @@
-package konra.reno.blockchain;
+package konra.reno.transaction;
 
 import java.util.Date;
 

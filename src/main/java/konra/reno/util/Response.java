@@ -1,4 +1,4 @@
-package konra.reno;
+package konra.reno.util;
 
 public class Response<T> {
 

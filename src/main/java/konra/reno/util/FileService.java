@@ -1,5 +1,7 @@
-package konra.reno.blockchain;
+package konra.reno.util;
 
+import konra.reno.account.Account;
+import konra.reno.blockchain.Block;
 import konra.reno.p2p.FileAgent;
 import org.springframework.stereotype.Service;
 
@@ -47,13 +49,13 @@ public class FileService {
         return true;
     }
 
-    public boolean addAccount(Account account){
+    public boolean appendTxt(String file, String txt){
 
         try {
 
-            File usersFile = new File(FileAgent.appDir, "accounts");
+            File usersFile = new File(FileAgent.appDir, file);
             FileWriter fw = new FileWriter(usersFile, true);
-            fw.write(account.getAddress() + ":" + account.getBalance() + "\n");
+            fw.write(txt);
             fw.close();
 
         } catch (Exception e){

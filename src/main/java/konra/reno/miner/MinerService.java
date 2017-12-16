@@ -1,10 +1,9 @@
 package konra.reno.miner;
 
-import konra.reno.Crypto;
 import konra.reno.blockchain.Block;
 import konra.reno.blockchain.CoreService;
-import konra.reno.blockchain.FileService;
-import konra.reno.blockchain.Transaction;
+import konra.reno.util.FileService;
+import konra.reno.transaction.Transaction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,7 +13,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.function.Consumer;
 
 @Service
 public class MinerService {

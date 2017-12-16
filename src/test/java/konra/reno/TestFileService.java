@@ -3,7 +3,7 @@ package konra.reno;
 import static org.junit.Assert.*;
 
 import konra.reno.blockchain.Block;
-import konra.reno.blockchain.FileService;
+import konra.reno.util.FileService;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.boot.test.context.SpringBootTest;

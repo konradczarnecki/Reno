@@ -1,7 +1,9 @@
 package konra.reno.blockchain;
 
-import konra.reno.Crypto;
-import konra.reno.KeysDto;
+import konra.reno.util.Crypto;
+import konra.reno.util.FileService;
+import konra.reno.util.KeysDto;
+import konra.reno.account.Account;
 import konra.reno.p2p.P2PService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,49 +38,6 @@ public class CoreService {
         this.fileService = fileService;
         this.config = new HashMap<>();
         exec  = Executors.newScheduledThreadPool(10);
-    }
-
-    public void init(){
-
-
-    }
-
-    public KeysDto createAccount(){
-
-        Account acc = Account.create();
-        KeyPair keys = Account.popLastKeys();
-        KeysDto keysDto = new KeysDto(keys);
-
-        fileService.addAccount(acc);
-
-        p2p.loginCommon();
-        p2p.updateFile("accounts");
-        p2p.logout();
-
-        p2p.register(acc.getAddress(), keysDto.getPrivateKey(), keysDto.getPrivateKey().substring(0, 4));
-
-        return keysDto;
-    }
-
-    public Double login(String publicKey, String privateKey){
-
-        boolean result = p2p.login(publicKey, privateKey, privateKey.substring(0, 4));
-        Double balance = null;
-
-        if(result){
-
-            String[] accounts = fileService.readTextFile("accounts").split("\n");
-
-            for(String account: accounts){
-
-                String adr = account.split(":")[0];
-                if(!adr.equals(publicKey)) continue;
-                balance = Double.valueOf(account.split(":")[1]);
-                break;
-            }
-        }
-
-        return balance;
     }
 
     public boolean startBlockchain(){

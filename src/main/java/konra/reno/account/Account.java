@@ -1,6 +1,6 @@
-package konra.reno.blockchain;
+package konra.reno.account;
 
-import konra.reno.Crypto;
+import konra.reno.util.Crypto;
 
 import java.io.UnsupportedEncodingException;
 import java.security.*;
@@ -17,6 +17,11 @@ public class Account {
 
         this.address = address;
         this.balance = 0;
+    }
+
+    public String toString(){
+
+        return this.address + ":" + this.balance;
     }
 
     public double getBalance() {

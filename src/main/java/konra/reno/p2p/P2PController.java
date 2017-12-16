@@ -1,6 +1,6 @@
 package konra.reno.p2p;
 
-import konra.reno.Response;
+import konra.reno.util.Response;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
