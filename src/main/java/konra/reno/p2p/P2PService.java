@@ -1,200 +1,171 @@
 package konra.reno.p2p;
 
-import org.apache.commons.io.FileUtils;
-import org.hive2hive.core.api.H2HNode;
-import org.hive2hive.core.api.configs.FileConfiguration;
-import org.hive2hive.core.api.configs.NetworkConfiguration;
-import org.hive2hive.core.api.interfaces.*;
-import org.hive2hive.processframework.ProcessState;
-import org.hive2hive.processframework.interfaces.IProcessComponent;
-import org.hive2hive.core.security.UserCredentials;
+import konra.reno.blockchain.CoreService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import java.io.File;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
-
+import javax.annotation.PostConstruct;
+import java.io.IOException;
+import java.net.InetSocketAddress;
+import java.nio.ByteBuffer;
+import java.nio.channels.Selector;
+import java.nio.channels.ServerSocketChannel;
+import java.nio.channels.SocketChannel;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 @Service
 public class P2PService {
 
-    private static String host;
     private static final Logger log = LoggerFactory.getLogger(P2PService.class);
 
-    private IH2HNode node;
-    private IProcessComponent downloading;
+    @Value("${main.port}")
+    private int chainSyncPort;
 
-    public P2PService(){
+    @Value("${test.hb}")
+    private int headBlock;
+
+    @Value("${test.hosts}")
+    private String testHosts;
+    private ServerSocketChannel chainSyncSocket;
+    private boolean listenForSync;
+    private List<String> hosts;
+
+    private ScheduledExecutorService exec;
+
+    public  P2PService(){
+
     }
 
-    public boolean bootstrap() throws UnknownHostException {
+    @PostConstruct
+    public void init() {
 
-        INetworkConfiguration netConfig;
-        if(host.equals("initial")) netConfig = NetworkConfiguration.createInitial();
-        else netConfig = NetworkConfiguration.create(InetAddress.getByName(host)).setBootstrapPort(4622);
+        exec = Executors.newScheduledThreadPool(10);
+        listenForSync = false;
 
-        IFileConfiguration fileConfig = FileConfiguration.createDefault();
-        node = H2HNode.createNode(fileConfig);
-        boolean connected = node.connect(netConfig);
+        try {
+            chainSyncSocket = ServerSocketChannel.open();
+            chainSyncSocket.socket().bind(new InetSocketAddress(chainSyncPort));
 
-        if(connected) try {
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
-            log.info("connected");
+        log.info("head: " + headBlock);
+        log.info(chainSyncPort + "");
 
-            if(!node.getUserManager().isRegistered("common")){
 
-                log.info("registering common user");
+        String[] hs = testHosts.split(",");
+        hosts = new ArrayList<>();
+        hosts.addAll(Arrays.asList(hs));
+    }
 
-                UserCredentials credentials = new UserCredentials("common", "common", "1234");
-                node.getUserManager().createRegisterProcess(credentials).execute();
+    public void runSyncProcess(){
+
+        listenForSync = true;
+
+        Runnable listenForHeadBlock = () -> {
+
+            try {
+
+                while(listenForSync){
+                    log.info("listening");
+                    SocketChannel sc = chainSyncSocket.accept();
+                    log.info("incoming request");
+                    processIncomingSyncMessage(sc);
+                }
+
+            } catch (IOException e) {
+                e.printStackTrace();
             }
+        };
 
-        } catch (Exception e) {
+        Runnable sendHeadBlock = () -> {
 
-            e.printStackTrace();
-        }
+            try {
 
-        return connected;
+                for(String host: hosts){
+
+                    log.info("sending to host " + host);
+
+                    String[] split = host.split(":");
+                    String hostname = split[0];
+                    Integer port = Integer.parseInt(split[1]);
+
+                    SocketChannel sc = SocketChannel.open(new InetSocketAddress(hostname, port));
+
+                    log.info("socket opened");
+                    log.info(sc.isConnected() + "");
+
+                    ByteBuffer bf = ByteBuffer.allocate(Long.BYTES);
+                    bf.putLong(headBlock);
+                    bf.flip();
+
+                    while(bf.hasRemaining()) sc.write(bf);
+
+                    log.info("head written");
+
+                    bf.clear();
+                    sc.read(bf);
+                    bf.flip();
+
+                    Long peerHeadBlock = bf.getLong();
+
+                    log.info("Peer head: " + peerHeadBlock);
+
+                }
+
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        };
+
+        exec.execute(listenForHeadBlock);
+        exec.scheduleAtFixedRate(sendHeadBlock, 5000, 5000, TimeUnit.MILLISECONDS);
     }
 
-    public boolean register(String id, String password, String pin){
+    public void processIncomingSyncMessage(SocketChannel sc){
 
-        IUserManager userManager = node.getUserManager();
-        UserCredentials credentials = new UserCredentials(id, password, pin);
-        boolean registered = false;
+        Runnable processRequest = () -> {
 
-        try {
-            IProcessComponent<Void> register = userManager.createRegisterProcess(credentials);
-            register.execute();
-            registered = userManager.isRegistered(id);
+            try {
+                ByteBuffer bf = ByteBuffer.allocate(Long.BYTES);
+                int bytesRead = sc.read(bf);
+//                if(bytesRead != -1) throw new RuntimeException("Chuj");
+                log.info("bytes read " + bytesRead);
+                bf.flip();
+                long peerHeadBlock = bf.getLong();
+                log.info(peerHeadBlock + "");
 
-        } catch(Exception e){
+                bf.clear();
+                bf.putLong(headBlock);
+                bf.flip();
 
-            e.printStackTrace();
-        }
+                while(bf.hasRemaining()) sc.write(bf);
+                bf.clear();
 
-        return registered;
+                log.info("return head written");
+
+                if(headBlock > peerHeadBlock){
+                    log.info("Sending blockchain ");
+                } else if(headBlock < peerHeadBlock) {
+                    log.info("Receiving blockchain");
+                } else {
+                    log.info("In Sync");
+                }
+
+
+            }catch(Exception e){
+                e.printStackTrace();
+            }
+        };
+
+        exec.execute(processRequest);
     }
-
-    public boolean login(String id, String password, String pin){
-
-        IUserManager userManager = node.getUserManager();
-        UserCredentials credentials = new UserCredentials(id, password, pin);
-        boolean logged = false;
-
-        try {
-            IProcessComponent<Void> login = userManager.createLoginProcess(credentials, new FileAgent());
-            login.execute();
-            logged = userManager.isLoggedIn();
-
-        } catch(Exception e){
-
-            e.printStackTrace();
-        }
-
-        return logged;
-    }
-
-    public boolean loginCommon(){
-
-        return login("common", "common", "1234");
-    }
-
-    public boolean logout(){
-
-        IUserManager userManager = node.getUserManager();
-        boolean loggedOut = false;
-
-        try {
-            userManager.createLogoutProcess().execute();
-            loggedOut = !userManager.isLoggedIn();
-
-        } catch(Exception e){
-
-            e.printStackTrace();
-        }
-
-        return loggedOut;
-    }
-
-    public boolean addTextFile(String name, String content){
-
-        IFileManager fileManager = node.getFileManager();
-        File file = new File(new FileAgent().getRoot(), name);
-
-        try {
-            FileUtils.write(file, content);
-            fileManager.createAddProcess(file).execute();
-
-        } catch (Exception e) {
-
-            e.printStackTrace();
-            return false;
-        }
-
-        return true;
-    }
-
-    public boolean addFile(String name){
-
-        IFileManager fileManager = node.getFileManager();
-        File file = new File(new FileAgent().getRoot(), name);
-
-        try {
-            fileManager.createAddProcess(file).execute();
-
-        } catch (Exception e) {
-
-            e.printStackTrace();
-            return false;
-        }
-
-        return true;
-    }
-
-    public boolean updateFile(String name){
-
-        IFileManager fileManager = node.getFileManager();
-        File file = new File(new FileAgent().getRoot(), name);
-
-        try {
-            fileManager.createUpdateProcess(file).execute();
-
-        } catch (Exception e) {
-
-            e.printStackTrace();
-            return false;
-        }
-
-        return true;
-    }
-
-    public void downloadFile(String name){
-
-        IFileManager fileManager = node.getFileManager();
-        File file = new File(new FileAgent().getRoot(), name);
-
-        try {
-            downloading = fileManager.createDownloadProcess(file);
-            downloading.execute();
-
-        } catch (Exception e) {
-
-        }
-    }
-
-    public boolean checkProgress(){
-
-        boolean finished = downloading.getState() == ProcessState.EXECUTION_SUCCEEDED;
-        if(finished) downloading = null;
-        return finished;
-    }
-
-    static void setHost(String host){
-
-        P2PService.host = host;
-    }
-
 }

@@ -32,20 +32,15 @@ public class AccountService {
         KeyPair keys = Account.popLastKeys();
         KeysDto keysDto = new KeysDto(keys);
 
-        fileService.appendTxt("accounts", acc.toString());
+//        fileService.appendTxt("accounts", acc.toString());
 
-        p2p.loginCommon();
-        p2p.updateFile("accounts");
-        p2p.logout();
-
-        p2p.register(acc.getAddress(), keysDto.getPrivateKey(), keysDto.getPrivateKey().substring(0, 4));
 
         return keysDto;
     }
 
     public Double login(String publicKey, String privateKey){
 
-        boolean result = p2p.login(publicKey, privateKey, privateKey.substring(0, 4));
+        boolean result = true;
         Double balance = null;
 
         if(result){

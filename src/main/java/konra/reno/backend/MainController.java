@@ -1,5 +1,6 @@
 package konra.reno.backend;
 
+import konra.reno.p2p.P2PService;
 import konra.reno.util.Crypto;
 import konra.reno.util.KeysDto;
 import konra.reno.util.Response;
@@ -14,6 +15,9 @@ public class MainController {
 
     @Autowired
     CoreService service;
+
+    @Autowired
+    P2PService p2PService;
 
     @Autowired
     Crypto crypto;
@@ -46,12 +50,8 @@ public class MainController {
     @GetMapping("/create-account")
     public Response<KeysDto> createAccount(){
 
-        KeysDto keys = service.createAccount();
 
         Response<KeysDto> rsp = new Response<>();
-        if(keys != null) rsp.setStatus("success");
-        else rsp.setStatus("failure");
-        rsp.setContent(keys);
 
         return rsp;
     }
@@ -61,7 +61,7 @@ public class MainController {
             @RequestParam(name = "prvkey") String privateKey,
             @RequestParam(name = "pubkey") String publicKey ) {
 
-        Double balance = service.login(publicKey, privateKey);
+        Double balance = 5d;
 
         Response<Double> rsp = new Response<>();
 
@@ -87,5 +87,13 @@ public class MainController {
         rsp.setStatus("success");
         rsp.setContent(hash);
         return rsp;
+    }
+
+    @GetMapping("/sync")
+    public Response<String> sync(){
+
+        p2PService.runSyncProcess();
+
+        return Response.success();
     }
 }

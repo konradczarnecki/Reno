@@ -95,6 +95,7 @@ public class Crypto {
 
     public String signB64(byte[] hash){
 
+        return "a";
 
     }
 

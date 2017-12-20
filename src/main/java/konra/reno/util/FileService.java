@@ -2,7 +2,6 @@ package konra.reno.util;
 
 import konra.reno.account.Account;
 import konra.reno.blockchain.Block;
-import konra.reno.p2p.FileAgent;
 import org.springframework.stereotype.Service;
 
 import java.io.*;
@@ -14,13 +13,14 @@ import java.util.LinkedList;
 @Service
 public class FileService {
 
+
     public LinkedList<Block> readBlockchain(){
 
         LinkedList<Block> blockchain = null;
 
         try {
 
-            File blockchainFile = new File(FileAgent.appDir, "blockchain");
+            File blockchainFile = new File("null", "blockchain");
             ObjectInputStream ois = new ObjectInputStream(new FileInputStream(blockchainFile));
             blockchain = (LinkedList<Block>) ois.readObject();
             ois.close();
@@ -36,7 +36,7 @@ public class FileService {
 
         try {
 
-            File blockchainFile = new File(FileAgent.appDir, "blockchain");
+            File blockchainFile = new File("null", "blockchain");
             ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(blockchainFile));
             oos.writeObject(blockchain);
             oos.close();
@@ -53,7 +53,7 @@ public class FileService {
 
         try {
 
-            File usersFile = new File(FileAgent.appDir, file);
+            File usersFile = new File("null", file);
             FileWriter fw = new FileWriter(usersFile, true);
             fw.write(txt);
             fw.close();
@@ -68,7 +68,7 @@ public class FileService {
 
     public String readTextFile(String name){
 
-        Path file = Paths.get(FileAgent.appDir, name);
+        Path file = Paths.get("null", name);
         if(!Files.exists(file)) return "file_not_found";
 
         StringBuilder sb = new StringBuilder();

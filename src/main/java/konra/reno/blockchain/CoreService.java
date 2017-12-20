@@ -42,10 +42,6 @@ public class CoreService {
 
     public boolean startBlockchain(){
 
-        p2p.loginCommon();
-        p2p.addTextFile("balances", "");
-        p2p.addTextFile("accounts", "");
-        p2p.addTextFile("config", "difficulty=0\n");
         config.put("difficulty", "0");
 
         Block initialBlock = new Block();
@@ -53,16 +49,12 @@ public class CoreService {
         blockchain.add(initialBlock);
 
         fileService.writeBlockchain(blockchain);
-        p2p.addFile("blockchain");
 
         return true;
     }
 
     public boolean downloadBlockchain(){
 
-        p2p.loginCommon();
-        p2p.downloadFile("blockchain");
-        p2p.logout();
 
         return true;
     }
@@ -94,7 +86,7 @@ public class CoreService {
 
     public boolean addBlock(Block block){
 
-        p2p.downloadFile("blockchain");
+
         LinkedList<Block> blockchain = fileService.readBlockchain();
 
         String prevPOW = blockchain.getLast().getPOW();
@@ -104,7 +96,7 @@ public class CoreService {
         log.debug("passed verification");
         blockchain.add(block);
         fileService.writeBlockchain(blockchain);
-        p2p.updateFile("blockchain");
+
 
         log.debug("Block added.");
 
