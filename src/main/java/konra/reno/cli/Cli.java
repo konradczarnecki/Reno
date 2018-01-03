@@ -103,9 +103,9 @@ public class Cli {
 
                     if(inputArr.length < 2) break;
 
-                    if(inputArr[1].equals("hashB64")){
+                    if(inputArr[1].equals("hashHex")){
 
-                        String result = getRequest("/crypto-hashB64", new HashMap<>());
+                        String result = getRequest("/crypto-hashHex", new HashMap<>());
                         System.out.println(result);
                     }
             }

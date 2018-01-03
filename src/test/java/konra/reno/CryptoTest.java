@@ -8,6 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.test.context.SpringBootTest;
 
+import javax.xml.bind.DatatypeConverter;
 import java.security.*;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
@@ -24,8 +25,8 @@ public class CryptoTest {
         String secretMessage = "secretMsgsecretMsg";
         String key = "16letterString00";
 
-        String encoded = Crypto.encAESBase64(key, secretMessage);
-        String decoded = Crypto.decAESBase64(key, encoded);
+        String encoded = Crypto.encAESHex(key, secretMessage);
+        String decoded = Crypto.decAESHex(key, encoded);
 
         log.info(encoded);
 
@@ -54,5 +55,12 @@ public class CryptoTest {
         String decrypted = Crypto.decryptRSA(prvKey, encrypted);
 
         assertEquals(message, decrypted);
+    }
+
+    @Test
+    public void testHash() {
+
+        String hash = Crypto.hashHex("dupa123");
+        System.out.println(hash);
     }
 }

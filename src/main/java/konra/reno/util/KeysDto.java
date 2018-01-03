@@ -1,14 +1,16 @@
 package konra.reno.util;
 
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
 import java.security.KeyPair;
 
+@NoArgsConstructor
 public class KeysDto {
 
-    private String publicKey;
-    private String privateKey;
-
-    public KeysDto() {
-    }
+    @Getter @Setter private String publicKey;
+    @Getter @Setter private String privateKey;
 
     public KeysDto(String publicKey, String privateKey){
 
@@ -26,21 +28,5 @@ public class KeysDto {
         } catch (Exception e) {
             e.printStackTrace();
         }
-    }
-
-    public String getPublicKey() {
-        return publicKey;
-    }
-
-    public void setPublicKey(String publicKey) {
-        this.publicKey = publicKey;
-    }
-
-    public String getPrivateKey() {
-        return privateKey;
-    }
-
-    public void setPrivateKey(String privateKey) {
-        this.privateKey = privateKey;
     }
 }

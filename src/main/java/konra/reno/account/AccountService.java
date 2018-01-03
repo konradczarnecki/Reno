@@ -43,19 +43,6 @@ public class AccountService {
         boolean result = true;
         Double balance = null;
 
-        if(result){
-
-            String[] accounts = fileService.readTextFile("accounts").split("\n");
-
-            for(String account: accounts){
-
-                String adr = account.split(":")[0];
-                if(!adr.equals(publicKey)) continue;
-                balance = Double.valueOf(account.split(":")[1]);
-                break;
-            }
-        }
-
         return balance;
     }
 }

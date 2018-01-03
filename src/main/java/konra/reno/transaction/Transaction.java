@@ -1,44 +1,78 @@
 package konra.reno.transaction;
 
+import konra.reno.util.Crypto;
+import lombok.Getter;
+
 import java.util.Date;
 
 public class Transaction {
 
-    String sender;
-    String receiver;
-    double amount;
-    long timestamp;
-    String signature;
+    @Getter private long timestamp;
+    @Getter private String sender;
+    @Getter private String receiver;
+    @Getter private double amount;
+    @Getter private double fee;
+    @Getter private String message;
+    @Getter private String signature;
 
-    public Transaction(String sender, String receiver, double amount) {
+    private Transaction(String sender, String receiver, double amount, double fee) {
 
         this.sender = sender;
         this.receiver = receiver;
         this.amount = amount;
+        this.fee = fee;
         this.timestamp = new Date().getTime();
     }
 
-    public String getSender() {
-        return sender;
+    public Transaction(String sender, String receiver, Double amount, double fee, String message){
+
+        this(sender, receiver, amount, fee);
+        this.message = message;
     }
 
-    public String getReceiver() {
-        return receiver;
+    private Transaction() {}
+
+    public String data() {
+
+        StringBuilder sb = new StringBuilder().
+            append(timestamp).append(":").
+            append(sender).append(":").
+            append(receiver).append(":").
+            append(amount).append(":").
+            append(fee).append(":").
+            append(message).append(":").
+            append(hash()).append(":").
+            append(signature);
+
+        return sb.toString();
     }
 
-    public double getAmount() {
-        return amount;
+    public String hash() {
+
+        StringBuilder sb = new StringBuilder().
+            append(timestamp).
+            append(sender).
+            append(receiver).
+            append(amount).
+            append(fee).
+            append(message);
+
+        return Crypto.hashHex(sb.toString());
     }
 
-    public long getTimestamp() {
-        return timestamp;
-    }
+    public static Transaction parse(String data) {
 
-    public String getSignature() {
-        return signature;
-    }
+        String[] props = data.split(":");
+        Transaction t = new Transaction();
+        t.timestamp = Long.parseLong(props[0]);
+        t.sender = props[1];
+        t.receiver = props[2];
+        t.amount = Double.parseDouble(props[3]);
+        t.fee = Double.parseDouble(props[4]);
+        t.message = props[5];
+        t.signature = props[7];
 
-    public void setSignature(String signature) {
-        this.signature = signature;
+        if(t.hash().equals(props[6])) return t;
+        else return null;
     }
 }

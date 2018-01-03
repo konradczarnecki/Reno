@@ -1,6 +1,7 @@
 package konra.reno.miner;
 
 import konra.reno.blockchain.Block;
+import konra.reno.blockchain.ChainChunk;
 import konra.reno.blockchain.CoreService;
 import konra.reno.util.FileService;
 import konra.reno.transaction.Transaction;
@@ -41,24 +42,24 @@ public class MinerService {
         if(stopMining) return;
 
         exec = exec == null ? Executors.newScheduledThreadPool(10) : exec;
-
-        LinkedList<Block> blockchain = fileService.readBlockchain();
-        Block lastBlock = blockchain.getLast();
-        Block newBlock = new Block(lastBlock);
-
-        Runnable mine = () -> {
-
-             Block verified = mineBlock(newBlock);
-             if(verified != null){
-
-                 if(core.addBlock(verified))
-                    log.info("Block mined." + verified.toString());
-             }
-
-             startMining();
-        };
-
-        exec.execute(mine);
+//
+//        ChainChunk chunk = fileService.readChunk();
+//        Block lastBlock = blockchain.getLast();
+//        Block newBlock = new Block(lastBlock);
+//
+//        Runnable mine = () -> {
+//
+//             Block verified = mineBlock(newBlock);
+//             if(verified != null){
+//
+//                 if(core.addBlock(verified))
+//                    log.info("Block mined." + verified.toString());
+//             }
+//
+//             startMining();
+//        };
+//
+//        exec.execute(mine);
     }
 
     public void stopMining(){
@@ -74,12 +75,12 @@ public class MinerService {
 
         for(long n = 0; n < Long.MAX_VALUE-1; n++){
 
-            raw.setNonce(n);
+            raw.bumpNonce();
             String hash = raw.hash();
 
             if(Block.verifyPOW(raw, hash)) {
 
-                raw.setPOW(hash);
+                raw.setPow(hash);
                 return raw;
             }
         }

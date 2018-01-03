@@ -13,7 +13,6 @@ public class AccountTest {
 
     @Before
     public void init(){
-        this.fileService = new FileService();
     }
 
 }

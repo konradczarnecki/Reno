@@ -1,13 +1,15 @@
 package konra.reno.util;
 
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+@NoArgsConstructor
 public class Response<T> {
 
-    private String status;
-    private String message;
-    private T content;
-
-    public Response(){
-    }
+    @Getter @Setter private String status;
+    @Getter @Setter private String message;
+    @Getter @Setter private T content;
 
     private Response(String status){
         this.status = status;
@@ -19,29 +21,5 @@ public class Response<T> {
 
     public static Response failure(){
         return new Response("failure");
-    }
-
-    public String getStatus() {
-        return status;
-    }
-
-    public void setStatus(String status) {
-        this.status = status;
-    }
-
-    public String getMessage() {
-        return message;
-    }
-
-    public void setMessage(String message) {
-        this.message = message;
-    }
-
-    public T getContent() {
-        return content;
-    }
-
-    public void setContent(T content) {
-        this.content = content;
     }
 }

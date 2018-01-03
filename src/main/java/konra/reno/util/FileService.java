@@ -2,87 +2,128 @@ package konra.reno.util;
 
 import konra.reno.account.Account;
 import konra.reno.blockchain.Block;
+import konra.reno.blockchain.ChainChunk;
+import lombok.SneakyThrows;
+import org.apache.commons.io.FileUtils;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.*;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.LinkedList;
+import java.nio.file.*;
 
 @Service
 public class FileService {
 
+    private String appDir;
 
-    public LinkedList<Block> readBlockchain(){
+    public FileService(@Value("${blockchain.dir}") String blockchainDir){
 
-        LinkedList<Block> blockchain = null;
-
-        try {
-
-            File blockchainFile = new File("null", "blockchain");
-            ObjectInputStream ois = new ObjectInputStream(new FileInputStream(blockchainFile));
-            blockchain = (LinkedList<Block>) ois.readObject();
-            ois.close();
-
-        } catch (Exception e){
-            e.printStackTrace();
-        }
-
-        return blockchain;
+        this.appDir = FileUtils.getUserDirectoryPath() + "/" + blockchainDir;
     }
 
-    public boolean writeBlockchain(LinkedList<Block> blockchain){
+    public long chunkCount() throws IOException {
 
-        try {
-
-            File blockchainFile = new File("null", "blockchain");
-            ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(blockchainFile));
-            oos.writeObject(blockchain);
-            oos.close();
-
-        } catch (Exception e){
-            e.printStackTrace();
-            return false;
-        }
-
-        return true;
+        return Files.list(Paths.get(appDir)).count();
     }
 
-    public boolean appendTxt(String file, String txt){
+    public void saveChunk(ChainChunk chunk) throws IOException {
 
-        try {
+        Path chunkPath = Paths.get(appDir, "chunk_" + chunk.getId());
+        BufferedWriter bw = Files.newBufferedWriter(chunkPath);
 
-            File usersFile = new File("null", file);
-            FileWriter fw = new FileWriter(usersFile, true);
-            fw.write(txt);
-            fw.close();
+        bw.write("Chunk " + chunk.getId());
+        bw.newLine();
 
-        } catch (Exception e){
-            e.printStackTrace();
-            return false;
-        }
+        bw.write(chunk.getState().getVal() + " ");
+        bw.write(chunk.getBlocks().size());
+        bw.newLine();
 
-        return true;
+        bw.write(chunk.getPreviousChunkHash() + " ");
+        bw.write(chunk.hash());
+
+        for(Block b: chunk.getBlocks()) bw.write(b.data());
+        bw.close();
     }
 
-    public String readTextFile(String name){
+    public ChainChunk readChunk(int chunkId) throws IOException {
 
-        Path file = Paths.get("null", name);
-        if(!Files.exists(file)) return "file_not_found";
+        ChainChunk chunk = new ChainChunk();
+        chunk.setId(chunkId);
 
-        StringBuilder sb = new StringBuilder();
+        Path chunkPath = Paths.get(appDir, "chunk_" + chunkId);
+        BufferedReader br = Files.newBufferedReader(chunkPath);
 
-        try {
-            BufferedReader br = Files.newBufferedReader(file);
+        String header = br.readLine();
+        String secondLine = br.readLine();
+
+        int blockCount = 256;
+        if(secondLine.substring(0,1).equals("H")) {
+            blockCount = Integer.parseInt(secondLine.split(" ")[1]);
+            chunk.setState(ChainChunk.ChunkState.HEAD);
+
+        } else chunk.setState(ChainChunk.ChunkState.COMPLETE);
+
+        for(int i = 0; i < blockCount; i++) {
+
+            StringBuilder sb = new StringBuilder();
+            for(int j = 0; j < 4; j++) sb.append(br.readLine()).append("\n");
+            Block b = Block.parse(sb.toString());
+            chunk.getBlocks().add(b);
+        }
+
+        return chunk;
+    }
+
+    public void writeTxtFile(String file, String data, OpenOption... option) {
+
+        Path p = Paths.get(appDir, file);
+        try(BufferedWriter bw = Files.newBufferedWriter(p, option)) {
+            bw.write(data);
+
+        } catch (IOException e) {}
+    }
+
+    public void appendTxtFile(String file, String data) {
+
+        writeTxtFile(file, data, StandardOpenOption.APPEND);
+    }
+
+    public void overwriteTxtFile(String file, String data) {
+
+        writeTxtFile(file, data, StandardOpenOption.WRITE, StandardOpenOption.CREATE);
+    }
+
+    public String readTextFile(String file) throws IOException {
+
+        return FileUtils.readFileToString(new File(appDir, file));
+    }
+
+    @SneakyThrows
+    public boolean overwriteLine(String file, String key, String newLine) {
+
+        try(BufferedReader br = Files.newBufferedReader(Paths.get(appDir, file));
+            BufferedWriter bw = Files.newBufferedWriter(Paths.get(appDir, file + "_tmp"))){
 
             String line;
-            while((line = br.readLine()) != null) sb.append(line);
-
-        } catch (IOException e) {
-            e.printStackTrace();
+            while((line = br.readLine()) != null) {
+                if(line.contains(key)) bw.write(newLine + "\n");
+                else bw.write(line + "\n");
+            }
         }
 
-        return sb.toString();
+        return true;
+    }
+
+    public String find(String file, String key) {
+
+        try(BufferedReader br = Files.newBufferedReader(Paths.get(appDir, file))){
+
+            String line;
+            while((line = br.readLine()) != null)
+                if(line.contains(key)) return line;
+
+        } catch (IOException e) {}
+
+        return null;
     }
 }

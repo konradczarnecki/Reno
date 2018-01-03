@@ -17,13 +17,6 @@ public class CoreServiceTest {
     @Test
     public void checkBlockchain(){
 
-        FileService fs = new FileService();
-        LinkedList<Block> blockain = fs.readBlockchain();
-
-        for(Block b: blockain){
-
-            log.info("Block {}", b.toString());
-        }
     }
 
 }

@@ -81,7 +81,7 @@ public class MainController {
     @GetMapping("/crypto-hash")
     public Response<String> hashValue(@RequestParam(name = "val") String value){
 
-        String hash = crypto.hashB64(value);
+        String hash = crypto.hashHex(value);
 
         Response<String> rsp = new Response<>();
         rsp.setStatus("success");

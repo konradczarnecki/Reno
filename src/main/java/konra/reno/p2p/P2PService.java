@@ -1,8 +1,10 @@
 package konra.reno.p2p;
 
 import konra.reno.blockchain.CoreService;
+import lombok.SneakyThrows;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -25,11 +27,10 @@ public class P2PService {
 
     private static final Logger log = LoggerFactory.getLogger(P2PService.class);
 
+    private CoreService core;
+
     @Value("${main.port}")
     private int chainSyncPort;
-
-    @Value("${test.hb}")
-    private int headBlock;
 
     @Value("${test.hosts}")
     private String testHosts;
@@ -39,90 +40,75 @@ public class P2PService {
 
     private ScheduledExecutorService exec;
 
-    public  P2PService(){
+    @Autowired
+    public P2PService(CoreService core) {
 
+        this.core = core;
     }
 
     @PostConstruct
+    @SneakyThrows
     public void init() {
 
         exec = Executors.newScheduledThreadPool(10);
         listenForSync = false;
 
-        try {
-            chainSyncSocket = ServerSocketChannel.open();
-            chainSyncSocket.socket().bind(new InetSocketAddress(chainSyncPort));
+        chainSyncSocket = ServerSocketChannel.open();
+        chainSyncSocket.socket().bind(new InetSocketAddress(chainSyncPort));
 
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        log.info("head: " + headBlock);
-        log.info(chainSyncPort + "");
-
+        log.debug(chainSyncPort + "");
 
         String[] hs = testHosts.split(",");
         hosts = new ArrayList<>();
         hosts.addAll(Arrays.asList(hs));
     }
 
-    public void runSyncProcess(){
+    @SneakyThrows
+    public void runSyncProcess() {
 
         listenForSync = true;
 
         Runnable listenForHeadBlock = () -> {
 
-            try {
-
-                while(listenForSync){
-                    log.info("listening");
-                    SocketChannel sc = chainSyncSocket.accept();
-                    log.info("incoming request");
-                    processIncomingSyncMessage(sc);
-                }
-
-            } catch (IOException e) {
-                e.printStackTrace();
+            while (listenForSync) {
+                log.debug("listening");
+                SocketChannel sc = chainSyncSocket.accept();
+                log.debug("incoming request");
+                processIncomingSyncMessage(sc);
             }
         };
 
         Runnable sendHeadBlock = () -> {
 
-            try {
+            for (String host : hosts) {
 
-                for(String host: hosts){
+                log.debug("sending to host " + host);
 
-                    log.info("sending to host " + host);
+                String[] split = host.split(":");
+                String hostname = split[0];
+                Integer port = Integer.parseInt(split[1]);
 
-                    String[] split = host.split(":");
-                    String hostname = split[0];
-                    Integer port = Integer.parseInt(split[1]);
+                SocketChannel sc = SocketChannel.open(new InetSocketAddress(hostname, port));
 
-                    SocketChannel sc = SocketChannel.open(new InetSocketAddress(hostname, port));
+                log.debug("socket opened");
+                log.debug(sc.isConnected() + "");
 
-                    log.info("socket opened");
-                    log.info(sc.isConnected() + "");
+                ByteBuffer bf = ByteBuffer.allocate(Long.BYTES);
+                bf.putLong(core.getHeadBlock());
+                bf.flip();
 
-                    ByteBuffer bf = ByteBuffer.allocate(Long.BYTES);
-                    bf.putLong(headBlock);
-                    bf.flip();
+                while (bf.hasRemaining()) sc.write(bf);
 
-                    while(bf.hasRemaining()) sc.write(bf);
+                log.debug("head written");
 
-                    log.info("head written");
+                bf.clear();
+                sc.read(bf);
+                bf.flip();
 
-                    bf.clear();
-                    sc.read(bf);
-                    bf.flip();
+                Long peerHeadBlock = bf.getLong();
 
-                    Long peerHeadBlock = bf.getLong();
+                log.debug("Peer head: " + peerHeadBlock);
 
-                    log.info("Peer head: " + peerHeadBlock);
-
-                }
-
-            } catch (IOException e) {
-                e.printStackTrace();
             }
         };
 
@@ -130,39 +116,33 @@ public class P2PService {
         exec.scheduleAtFixedRate(sendHeadBlock, 5000, 5000, TimeUnit.MILLISECONDS);
     }
 
-    public void processIncomingSyncMessage(SocketChannel sc){
+    @SneakyThrows
+    private void processIncomingSyncMessage(SocketChannel sc) {
 
         Runnable processRequest = () -> {
 
-            try {
-                ByteBuffer bf = ByteBuffer.allocate(Long.BYTES);
-                int bytesRead = sc.read(bf);
-//                if(bytesRead != -1) throw new RuntimeException("Chuj");
-                log.info("bytes read " + bytesRead);
-                bf.flip();
-                long peerHeadBlock = bf.getLong();
-                log.info(peerHeadBlock + "");
+            ByteBuffer bf = ByteBuffer.allocate(Long.BYTES);
+            sc.read(bf);
+            bf.flip();
+            long peerHeadBlock = bf.getLong();
 
-                bf.clear();
-                bf.putLong(headBlock);
-                bf.flip();
+            log.info(peerHeadBlock + "");
 
-                while(bf.hasRemaining()) sc.write(bf);
-                bf.clear();
+            bf.clear();
+            bf.putLong(core.getHeadBlock());
+            bf.flip();
 
-                log.info("return head written");
+            while (bf.hasRemaining()) sc.write(bf);
+            bf.clear();
 
-                if(headBlock > peerHeadBlock){
-                    log.info("Sending blockchain ");
-                } else if(headBlock < peerHeadBlock) {
-                    log.info("Receiving blockchain");
-                } else {
-                    log.info("In Sync");
-                }
+            log.info("return head written");
 
-
-            }catch(Exception e){
-                e.printStackTrace();
+            if (core.getHeadBlock() > peerHeadBlock) {
+                log.info("Sending blockchain ");
+            } else if (core.getHeadBlock() < peerHeadBlock) {
+                log.info("Receiving blockchain");
+            } else {
+                log.info("In Sync");
             }
         };
 

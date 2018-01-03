@@ -1,17 +1,28 @@
 package konra.reno.account;
 
 import konra.reno.util.Crypto;
+import lombok.*;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.mongodb.core.mapping.Field;
 
+import javax.xml.bind.DatatypeConverter;
 import java.io.UnsupportedEncodingException;
 import java.security.*;
 
+@Document(collection = "state")
+@NoArgsConstructor
+@EqualsAndHashCode
 public class Account {
 
-    private static final Crypto crypto = new Crypto();
     private static KeyPair lastKeys;
 
-    private String address;
-    private double balance;
+    @Id
+    @Field("address")
+    @Getter @Setter private String address;
+
+    @Field("balance")
+    @Getter @Setter private double balance;
 
     private Account(String address){
 
@@ -19,35 +30,11 @@ public class Account {
         this.balance = 0;
     }
 
-    public String toString(){
-
-        return this.address + ":" + this.balance;
-    }
-
-    public double getBalance() {
-        return balance;
-    }
-
-    public void setBalance(double balance) {
-        this.balance = balance;
-    }
-
-    public String getAddress() {
-        return address;
-    }
-
+    @SneakyThrows
     public static Account create(){
 
-        lastKeys = crypto.keyPair();
-        String address = "";
-
-        try {
-            address = new String(lastKeys.getPublic().getEncoded(), "UTF-8");
-
-        } catch (UnsupportedEncodingException e) {
-            e.printStackTrace();
-        }
-
+        lastKeys = Crypto.keyPair();
+        String address = DatatypeConverter.printHexBinary(lastKeys.getPublic().getEncoded());
         return new Account(address);
     }
 
@@ -56,5 +43,10 @@ public class Account {
         KeyPair keys = lastKeys;
         lastKeys = null;
         return keys;
+    }
+
+    public String toString(){
+
+        return this.address + ":" + this.balance;
     }
 }
