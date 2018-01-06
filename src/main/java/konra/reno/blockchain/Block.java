@@ -1,9 +1,11 @@
 package konra.reno.blockchain;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import konra.reno.util.Crypto;
 import konra.reno.transaction.Transaction;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.SneakyThrows;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.annotation.Id;
@@ -67,15 +69,10 @@ public class Block {
         }
     }
 
-    public String data() {
+    public void bumpNonce() {
 
-        StringBuilder sb = new StringBuilder();
-        sb.append("@").append(id).append("\n");
-        sb.append(transactions.size()).append(":").append(nonce).append(":").append(difficulty).append("\n");
-        sb.append(pow).append(":").append(previousPOW).append("\n");
-        for(Transaction t: transactions) sb.append(t.data()).append("/");
-
-        return sb.toString();
+        nonce++;
+        this.hashCache = "";
     }
 
     public String hash() {
@@ -94,12 +91,12 @@ public class Block {
         return hashCache;
     }
 
-    public void bumpNonce() {
+    @SneakyThrows
+    public String data() {
 
-        nonce++;
-        this.hashCache = "";
+        ObjectMapper mapper = new ObjectMapper();
+        return mapper.writeValueAsString(this);
     }
-
 
     public String toString(){
 
@@ -110,40 +107,11 @@ public class Block {
                 "---------------\n";
     }
 
+    @SneakyThrows
     public static Block parse(String data) {
 
-        Block b = new Block();
-        String[] lines = data.split("\n");
-
-        long id = Long.valueOf(lines[0].substring(1));
-
-        String[] secondLine = lines[1].split(":");
-        int transactionCount = Integer.parseInt(secondLine[0]);
-        long nonce = Long.parseLong(secondLine[1]);
-        int difficulty = Integer.parseInt(secondLine[2]);
-
-        String[] thirdLine = lines[2].split(":");
-        String pow = thirdLine[0];
-        String prevPow = thirdLine[1];
-
-        String[] transactions = lines[3].split("/");
-
-        for(String transaction: transactions) {
-
-            Transaction t = Transaction.parse(transaction);
-            b.transactions.add(t);
-        }
-
-        b.id = id;
-        b.nonce = nonce;
-        b.difficulty = difficulty;
-        b.pow = pow;
-        b.previousPOW = prevPow;
-
-        if(b.transactions.size() != transactionCount || !b.hash().equals(pow))
-            throw new RuntimeException("Invalid block, id: " + b.id);
-
-        return b;
+        ObjectMapper mapper = new ObjectMapper();
+        return mapper.readValue(data, Block.class);
     }
 
     public static boolean verify(Block block, String prevPOW) {

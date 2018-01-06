@@ -42,24 +42,7 @@ public class MinerService {
         if(stopMining) return;
 
         exec = exec == null ? Executors.newScheduledThreadPool(10) : exec;
-//
-//        ChainChunk chunk = fileService.readChunk();
-//        Block lastBlock = blockchain.getLast();
-//        Block newBlock = new Block(lastBlock);
-//
-//        Runnable mine = () -> {
-//
-//             Block verified = mineBlock(newBlock);
-//             if(verified != null){
-//
-//                 if(core.addBlock(verified))
-//                    log.info("Block mined." + verified.toString());
-//             }
-//
-//             startMining();
-//        };
-//
-//        exec.execute(mine);
+
     }
 
     public void stopMining(){
