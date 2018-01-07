@@ -16,6 +16,7 @@ public class Response<T> {
     }
 
     public static Response success(){
+
         return new Response<>("success");
     }
 

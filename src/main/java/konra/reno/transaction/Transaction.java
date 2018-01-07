@@ -1,7 +1,9 @@
 package konra.reno.transaction;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import konra.reno.util.Crypto;
 import lombok.Getter;
+import lombok.SneakyThrows;
 
 import java.util.Date;
 
@@ -32,19 +34,11 @@ public class Transaction {
 
     private Transaction() {}
 
+    @SneakyThrows
     public String data() {
 
-        StringBuilder sb = new StringBuilder().
-            append(timestamp).append(":").
-            append(sender).append(":").
-            append(receiver).append(":").
-            append(amount).append(":").
-            append(fee).append(":").
-            append(message).append(":").
-            append(hash()).append(":").
-            append(signature);
-
-        return sb.toString();
+        ObjectMapper mapper = new ObjectMapper();
+        return mapper.writeValueAsString(this);
     }
 
     public String hash() {
@@ -60,19 +54,10 @@ public class Transaction {
         return Crypto.hashHex(sb.toString());
     }
 
+    @SneakyThrows
     public static Transaction parse(String data) {
 
-        String[] props = data.split(":");
-        Transaction t = new Transaction();
-        t.timestamp = Long.parseLong(props[0]);
-        t.sender = props[1];
-        t.receiver = props[2];
-        t.amount = Double.parseDouble(props[3]);
-        t.fee = Double.parseDouble(props[4]);
-        t.message = props[5];
-        t.signature = props[7];
-
-        if(t.hash().equals(props[6])) return t;
-        else return null;
+        ObjectMapper mapper = new ObjectMapper();
+        return mapper.readValue(data, Transaction.class);
     }
 }

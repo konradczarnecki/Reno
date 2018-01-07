@@ -7,6 +7,6 @@ import java.util.List;
 
 public interface StateRepository extends MongoRepository<Account, String> {
 
-    Account getAccountByAddress(String address);
-    List<Account> getAllByAddressNotNull();
+    Account findAccountByAddress(String address);
+    List<Account> findAll();
 }

@@ -1,7 +1,6 @@
 package konra.reno.miner;
 
 import konra.reno.blockchain.Block;
-import konra.reno.blockchain.ChainChunk;
 import konra.reno.blockchain.CoreService;
 import konra.reno.util.FileService;
 import konra.reno.transaction.Transaction;
@@ -10,7 +9,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;

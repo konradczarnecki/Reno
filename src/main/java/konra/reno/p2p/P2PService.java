@@ -1,18 +1,20 @@
 package konra.reno.p2p;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import konra.reno.blockchain.Block;
 import konra.reno.blockchain.CoreService;
+import konra.reno.p2p.handlers.BlockHandler;
+import konra.reno.p2p.handlers.MessageHandler;
 import lombok.SneakyThrows;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
-import java.io.IOException;
+import javax.annotation.Resource;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
-import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.util.ArrayList;
@@ -20,7 +22,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 @Service
 public class P2PService {
@@ -28,124 +30,140 @@ public class P2PService {
     private static final Logger log = LoggerFactory.getLogger(P2PService.class);
 
     private CoreService core;
+    private P2PConfig config;
 
-    @Value("${main.port}")
-    private int chainSyncPort;
+    @Resource
+    private List<MessageHandler> handlers;
 
-    @Value("${test.hosts}")
-    private String testHosts;
-    private ServerSocketChannel chainSyncSocket;
-    private boolean listenForSync;
-    private List<String> hosts;
+    private ServerSocketChannel incomingMessageSocket;
+    private boolean online;
+    private List<HostInfo> hosts;
 
     private ScheduledExecutorService exec;
 
     @Autowired
-    public P2PService(CoreService core) {
+    public P2PService(CoreService core, P2PConfig config) {
 
         this.core = core;
+        this.config = config;
     }
 
     @PostConstruct
     @SneakyThrows
     public void init() {
 
+        core.registerSyncCallback(this::checkSync);
         exec = Executors.newScheduledThreadPool(10);
-        listenForSync = false;
+        online = false;
 
-        chainSyncSocket = ServerSocketChannel.open();
-        chainSyncSocket.socket().bind(new InetSocketAddress(chainSyncPort));
+        incomingMessageSocket = ServerSocketChannel.open();
+        incomingMessageSocket.socket().bind(new InetSocketAddress(config.getDefaultMessagePort()));
+    }
 
-        log.debug(chainSyncPort + "");
+    public void connect() {
 
-        String[] hs = testHosts.split(",");
+        getHosts();
+        checkSync();
+        online = true;
+        listenForMessages();
+    }
+
+    public void checkSync() {
+
+        BlockHandler handler = (BlockHandler) handlers.stream().filter((hndl) -> hndl.getType() == InitMessage.Type.Block);
+        handler.exchangeHeadInfo(hosts);
+    }
+
+    private void getHosts() {
+
         hosts = new ArrayList<>();
-        hosts.addAll(Arrays.asList(hs));
+        String[] trackers = config.getTrackers().split(",");
+
+        for(String tracker: trackers) {
+
+            try {
+
+                HostInfo info = HostInfo.createHostInfo(tracker, config);
+                SocketChannel sc = SocketChannel.open(new InetSocketAddress(info.getAddress(), info.getPort()));
+
+                ByteBuffer bb = ByteBuffer.allocate(2048);
+                sc.read(bb);
+                bb.flip();
+                String[] addresses = new String(bb.array()).split(",");
+
+                hosts.addAll(Arrays.stream(addresses).
+                        map((address) -> HostInfo.createHostInfo(address, config)).
+                        collect(Collectors.toList()));
+
+                if(hosts.size() >= config.getInitHosts()) break;
+
+            } catch (Exception ignored) {}
+        }
     }
 
     @SneakyThrows
-    public void runSyncProcess() {
+    public void listenForMessages() {
 
-        listenForSync = true;
+        Runnable listen = () -> {
 
-        Runnable listenForHeadBlock = () -> {
-
-            while (listenForSync) {
-                log.debug("listening");
-                SocketChannel sc = chainSyncSocket.accept();
-                log.debug("incoming request");
-                processIncomingSyncMessage(sc);
+            while (online) {
+                log.debug("Listening...");
+                SocketChannel sc = incomingMessageSocket.accept();
+                processIncomingMessage(sc);
             }
         };
-
-        Runnable sendHeadBlock = () -> {
-
-            for (String host : hosts) {
-
-                log.debug("sending to host " + host);
-
-                String[] split = host.split(":");
-                String hostname = split[0];
-                Integer port = Integer.parseInt(split[1]);
-
-                SocketChannel sc = SocketChannel.open(new InetSocketAddress(hostname, port));
-
-                log.debug("socket opened");
-                log.debug(sc.isConnected() + "");
-
-                ByteBuffer bf = ByteBuffer.allocate(Long.BYTES);
-                bf.putLong(core.getHeadBlock());
-                bf.flip();
-
-                while (bf.hasRemaining()) sc.write(bf);
-
-                log.debug("head written");
-
-                bf.clear();
-                sc.read(bf);
-                bf.flip();
-
-                Long peerHeadBlock = bf.getLong();
-
-                log.debug("Peer head: " + peerHeadBlock);
-
-            }
-        };
-
-        exec.execute(listenForHeadBlock);
-        exec.scheduleAtFixedRate(sendHeadBlock, 5000, 5000, TimeUnit.MILLISECONDS);
+        exec.execute(listen);
     }
 
     @SneakyThrows
-    private void processIncomingSyncMessage(SocketChannel sc) {
+    private void processIncomingMessage(SocketChannel sc) {
 
-        Runnable processRequest = () -> {
+        Runnable processMessage = () -> {
 
-            ByteBuffer bf = ByteBuffer.allocate(Long.BYTES);
+            ByteBuffer bf = ByteBuffer.allocate(2048);
             sc.read(bf);
             bf.flip();
-            long peerHeadBlock = bf.getLong();
+            InitMessage message = InitMessage.parse(new String(bf.array()));
+            log.debug("Incoming message " + message.toString());
 
-            log.info(peerHeadBlock + "");
-
-            bf.clear();
-            bf.putLong(core.getHeadBlock());
-            bf.flip();
-
-            while (bf.hasRemaining()) sc.write(bf);
-            bf.clear();
-
-            log.info("return head written");
-
-            if (core.getHeadBlock() > peerHeadBlock) {
-                log.info("Sending blockchain ");
-            } else if (core.getHeadBlock() < peerHeadBlock) {
-                log.info("Receiving blockchain");
-            } else {
-                log.info("In Sync");
-            }
+            handlers.stream().filter(handler -> handler.getType() == message.getType()).
+                    collect(Collectors.toList()).get(0).handleIncomingMessage(message, sc);
         };
 
-        exec.execute(processRequest);
+        exec.execute(processMessage);
+    }
+
+    @SneakyThrows
+    private List<Block> readBlocksFromSocket(SocketChannel sc) {
+
+        ByteBuffer bf = ByteBuffer.allocate(Integer.BYTES);
+        sc.read(bf);
+        bf.flip();
+        int size = bf.getInt();
+
+        bf = ByteBuffer.allocate(size);
+        sc.read(bf);
+        bf.flip();
+
+        String data = new String(bf.array());
+        ObjectMapper mapper = new ObjectMapper();
+        return mapper.readValue(data, List.class);
+    }
+
+    @SneakyThrows
+    private void writeBlocksToSocket(List<Block> blocks, SocketChannel sc) {
+
+        ObjectMapper mapper = new ObjectMapper();
+        String data = mapper.writeValueAsString(blocks);
+
+        ByteBuffer bf = ByteBuffer.allocate(Integer.BYTES);
+        bf.putInt(data.getBytes().length);
+        bf.flip();
+        while(bf.hasRemaining()) sc.write(bf);
+
+        bf = ByteBuffer.allocate(data.getBytes().length);
+        bf.put(data.getBytes());
+        bf.flip();
+        while(bf.hasRemaining()) sc.write(bf);
     }
 }

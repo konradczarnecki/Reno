@@ -2,9 +2,6 @@ package konra.reno.blockchain;
 
 import konra.reno.util.Crypto;
 import konra.reno.util.FileService;
-import konra.reno.util.KeysDto;
-import konra.reno.account.Account;
-import konra.reno.p2p.P2PService;
 import lombok.Getter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -12,7 +9,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.security.KeyPair;
 import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -29,7 +25,8 @@ public class CoreService {
     private Map<String, String> config;
     private ScheduledExecutorService exec;
 
-    @Getter private long headBlock;
+    @Getter private long headBlockId;
+    private Runnable syncCallback;
 
     @Autowired
     public CoreService(Crypto crypto, FileService fileService, BlockRepository blockRepository) {
@@ -42,32 +39,28 @@ public class CoreService {
     }
 
     @Transactional
-    public boolean startBlockchain(){
+    public boolean startBlockchain() {
 
         Block initialBlock = new Block(null);
         blockRepository.save(initialBlock);
-        headBlock = 1;
+        headBlockId = 1;
 
         return true;
     }
 
-    public boolean downloadBlockchain(){
+    public void registerSyncCallback(Runnable callback) {
 
-
-        return true;
+        syncCallback = callback;
     }
 
-    public boolean verifyBlockchain(StringBuilder sb){
+    public void setHeadBlockId(long id) {
 
-
-
-        return true;
+        headBlockId = id;
+        syncCallback.run();
     }
 
-    public boolean addBlock(Block block){
+    public List<Block> getBlocks(long fromId, long toId) {
 
-        return true;
+        return blockRepository.findBlocksByIdBetween(fromId, toId);
     }
-
-    
 }

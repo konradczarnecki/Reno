@@ -92,7 +92,7 @@ public class MainController {
     @GetMapping("/sync")
     public Response<String> sync(){
 
-        p2PService.runSyncProcess();
+        p2PService.listenForMessages();
 
         return Response.success();
     }
