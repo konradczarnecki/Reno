@@ -1,5 +1,6 @@
 package konra.reno.blockchain;
 
+import konra.reno.account.Account;
 import konra.reno.transaction.Transaction;
 import konra.reno.util.Crypto;
 import konra.reno.util.FileService;
@@ -8,8 +9,6 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,7 +16,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.stream.Stream;
 
 @Service
 @FieldDefaults(level = AccessLevel.PRIVATE)
@@ -27,6 +25,7 @@ public class CoreService {
     FileService fileService;
     Crypto crypto;
     BlockRepository blockRepository;
+    StateRepository stateRepository;
 
     Map<String, String> config;
     ScheduledExecutorService exec;
@@ -36,11 +35,12 @@ public class CoreService {
     @Getter @Setter long networkHead;
 
     @Autowired
-    public CoreService(Crypto crypto, FileService fileService, BlockRepository blockRepository) {
+    public CoreService(Crypto crypto, FileService fileService, BlockRepository blockRepository, StateRepository stateRepository) {
 
         this.crypto = crypto;
         this.fileService = fileService;
         this.blockRepository = blockRepository;
+        this.stateRepository = stateRepository;
         this.config = new HashMap<>();
         exec  = Executors.newScheduledThreadPool(10);
     }
@@ -86,28 +86,43 @@ public class CoreService {
         Block currentHead = blockRepository.findTopByOrderByIdDesc();
         if(
                 block.getId() - 1 != currentHead.getId() ||
-                !Block.verify(block, currentHead.getPreviousPOW())||
+                !Block.validate(block, currentHead.getPreviousPOW())||
                 !verifyTransactions(block.getTransactions())) return false;
 
     }
 
     private boolean verifyTransactions(List<Transaction> transactions) {
 
-        Map<String, Double> stateDelta = new HashMap<>();
+        if(!transactions.stream().allMatch(Transaction::validate)) return false;
 
-        transactions.forEach(transaction -> {
+        Map<String, Double> summedMap = getSummedTransactionsMap(transactions);
+
+        for(Map.Entry<String, Double> entry: summedMap.entrySet()) {
+
+            Account acc = stateRepository.findAccountByAddress(entry.getKey());
+            if(acc == null || acc.getBalance() < entry.getValue()) return false;
+        }
+
+        if(transactions.stream().filter(transaction -> transaction.getSender().equals("0") && transaction.getAmount() != 0).count() != 1) return false;
+
+        return true;
+    }
+
+    private Map<String, Double> getSummedTransactionsMap(List<Transaction> transactions) {
+
+        Map<String, Double> summedMap = new HashMap<>();
+
+        transactions.stream().filter(transaction -> !transaction.getSender().equals("0")).forEach(transaction -> {
+
             String sender = transaction.getSender();
-            String receiver = transaction.getReceiver();
 
-            if(!stateDelta.containsKey(sender)) stateDelta.put(sender, 0d);
-            stateDelta.put(sender, stateDelta.get(sender) - transaction.getAmount());
-
-            if(!stateDelta.containsKey(receiver)) stateDelta.put(receiver, 0d);
-            stateDelta.put(receiver, stateDelta.get(receiver) + transaction.getAmount());
+            if(summedMap.containsKey(sender)) summedMap.put(sender, summedMap.get(sender) + transaction.getAmount());
+            else summedMap.put(sender, 0d);
         });
 
+        return summedMap;
+    }
 
-     }
 
     private void acceptBlock() {
 

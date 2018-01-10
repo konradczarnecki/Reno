@@ -61,7 +61,7 @@ public class Transaction {
         return mapper.readValue(data, Transaction.class);
     }
 
-    public static boolean verify() {
+    public static boolean validate(Transaction t) {
 
         return true;
     }

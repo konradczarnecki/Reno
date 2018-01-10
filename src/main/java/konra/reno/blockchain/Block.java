@@ -101,7 +101,7 @@ public class Block {
         return mapper.readValue(data, Block.class);
     }
 
-    public static boolean verify(Block block, String prevPOW) {
+    public static boolean validate(Block block, String prevPOW) {
 
         String hash = block.hash();
         if (!hash.equals(block.getPow())) return false;

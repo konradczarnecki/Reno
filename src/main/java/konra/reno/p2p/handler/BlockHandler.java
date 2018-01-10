@@ -104,6 +104,7 @@ public class BlockHandler implements MessageHandler {
 
         List<Block> blocks = readBlocksFromSocket(sc);
 
+
     }
 
     @SneakyThrows
