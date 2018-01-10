@@ -60,4 +60,9 @@ public class Transaction {
         ObjectMapper mapper = new ObjectMapper();
         return mapper.readValue(data, Transaction.class);
     }
+
+    public static boolean verify() {
+
+        return true;
+    }
 }

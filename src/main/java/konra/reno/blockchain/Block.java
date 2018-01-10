@@ -3,12 +3,13 @@ package konra.reno.blockchain;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import konra.reno.util.Crypto;
 import konra.reno.transaction.Transaction;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.SneakyThrows;
+import lombok.*;
+import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.Transient;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 
@@ -17,37 +18,23 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Document(collection = "block")
+@FieldDefaults(level = AccessLevel.PRIVATE)
+@Getter @Setter
+@Slf4j
 public class Block {
 
-    private static final Logger log = LoggerFactory.getLogger(Block.class);
-
     @Id
-    @Field("id")
-    @Getter private long id;
+    @Field("id") long id;
+    @Field("nonce") long nonce;
+    @Field("transactions") List<Transaction> transactions;
+    @Field("prevPOW") String previousPOW;
+    @Field("difficulty") int difficulty;
+    @Field("pow") String pow;
+    @Field("miner") String miner;
+    @Field("stateHash") String stateHash;
 
-    @Field("nonce")
-    @Getter private long nonce;
-
-    @Field("transactions")
-    @Getter private List<Transaction> transactions;
-
-    @Field("prevPOW")
-    @Getter private String previousPOW;
-
-    @Field("difficulty")
-    @Getter private int difficulty;
-
-    @Field("pow")
-    @Getter @Setter private String pow;
-
-    @Field("miner")
-    @Getter @Setter private String miner;
-
-    @Field("stateHash")
-    @Getter @Setter private String stateHash;
-
-    private String hashCache;
-    private String transactionsHashCache;
+    @Transient String hashCache;
+    @Transient String transactionsHashCache;
 
     private Block() {
 
@@ -120,7 +107,7 @@ public class Block {
         if (!hash.equals(block.getPow())) return false;
         log.debug("pow matches");
 
-        return (block.getId() <= 1 || block.getPreviousPOW().equals(prevPOW)) && verifyPOW(block, hash);
+        return (block.getId() == 1 || block.getPreviousPOW().equals(prevPOW)) && verifyPOW(block, hash);
     }
 
     public static boolean verifyPOW(Block block, String pow){

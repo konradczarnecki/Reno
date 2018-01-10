@@ -13,16 +13,17 @@ import java.security.*;
 @Document(collection = "state")
 @NoArgsConstructor
 @EqualsAndHashCode
+@Getter @Setter
 public class Account {
 
     private static KeyPair lastKeys;
 
     @Id
     @Field("address")
-    @Getter @Setter private String address;
+    private String address;
 
     @Field("balance")
-    @Getter @Setter private double balance;
+    private double balance;
 
     private Account(String address){
 

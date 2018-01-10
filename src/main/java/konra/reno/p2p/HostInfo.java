@@ -1,15 +1,18 @@
 package konra.reno.p2p;
 
 import lombok.*;
+import lombok.experimental.FieldDefaults;
 
 @ToString
-@EqualsAndHashCode
-@NoArgsConstructor
+@Getter
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class HostInfo {
 
-    @Getter private String address;
-    @Getter private int port;
-    @Getter @Setter private long headId;
+    String address;
+    int port;
+    @Setter long headId;
+
+    private HostInfo() {}
 
     public static HostInfo createHostInfo(String hostAddress, P2PConfig config) {
 
@@ -26,5 +29,14 @@ public class HostInfo {
         }
 
         return info;
+    }
+
+    public boolean equals(Object o) {
+
+        if(this == o) return true;
+        if(o == null || o.getClass() != getClass()) return false;
+        HostInfo other = (HostInfo) o;
+
+        return this.address.equals(other.address) && this.port == other.port;
     }
 }

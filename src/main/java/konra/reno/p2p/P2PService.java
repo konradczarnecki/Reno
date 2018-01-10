@@ -1,13 +1,14 @@
 package konra.reno.p2p;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import konra.reno.blockchain.Block;
 import konra.reno.blockchain.CoreService;
-import konra.reno.p2p.handlers.BlockHandler;
-import konra.reno.p2p.handlers.MessageHandler;
+import konra.reno.p2p.handler.BlockHandler;
+import konra.reno.p2p.handler.MessageHandler;
+import konra.reno.p2p.handler.PeerHandler;
+import konra.reno.p2p.message.InitMessage;
+import lombok.AccessLevel;
 import lombok.SneakyThrows;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -17,33 +18,29 @@ import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.stream.Collectors;
 
 @Service
+@FieldDefaults(level = AccessLevel.PRIVATE)
+@Slf4j
 public class P2PService {
 
-    private static final Logger log = LoggerFactory.getLogger(P2PService.class);
+    static Map<String, HostInfo> hosts;
 
-    private CoreService core;
-    private P2PConfig config;
+    CoreService core;
+    P2PConfig config;
 
     @Resource
-    private List<MessageHandler> handlers;
+    List<MessageHandler> handlers;
+    ScheduledExecutorService exec;
 
-    private ServerSocketChannel incomingMessageSocket;
-    private boolean online;
-    private List<HostInfo> hosts;
-
-    private ScheduledExecutorService exec;
+    ServerSocketChannel incomingMessageSocket;
+    boolean doConnect;
 
     @Autowired
     public P2PService(CoreService core, P2PConfig config) {
-
         this.core = core;
         this.config = config;
     }
@@ -54,7 +51,7 @@ public class P2PService {
 
         core.registerSyncCallback(this::checkSync);
         exec = Executors.newScheduledThreadPool(10);
-        online = false;
+        doConnect = false;
 
         incomingMessageSocket = ServerSocketChannel.open();
         incomingMessageSocket.socket().bind(new InetSocketAddress(config.getDefaultMessagePort()));
@@ -62,57 +59,67 @@ public class P2PService {
 
     public void connect() {
 
-        getHosts();
-        checkSync();
-        online = true;
-        listenForMessages();
+        doConnect = true;
+        exec.execute(this::listenForMessages);
+        exec.execute(this::getHosts);
+        refreshHeadInfo();
     }
 
-    public void checkSync() {
+    public Status checkConnect() {
 
-        BlockHandler handler = (BlockHandler) handlers.stream().filter((hndl) -> hndl.getType() == InitMessage.Type.Block);
-        handler.exchangeHeadInfo(hosts);
+        Status status = new Status();
+        status.setHostCount(hosts.size());
+
+        int connectedHosts = (int) hosts.values().stream()
+                .filter(host -> host.getHeadId() != -1).count();
+
+        status.setConnectedHosts(connectedHosts);
+
+        return status;
+    }
+
+    public void synchronize() {
+
+        Status status = checkConnect();
+
+        if(status.getConnectedHosts() == 0) throw new IllegalStateException("No connected hosts to synchronize with.");
+        if(checkSync()) return;
+
+        BlockHandler blockHandler = (BlockHandler) getHandler(BlockHandler.class);
+        blockHandler.requestBlocks();
+
+    }
+
+    public boolean checkSync() {
+
+        HostInfo headHost = hosts.values().stream()
+                .filter(host -> host.getHeadId() != -1)
+                .max((host1, host2) -> (int) (host1.getHeadId() - host2.getHeadId())).get();
+
+        core.setNetworkHead(headHost.getHeadId());
+        return headHost.getHeadId() <= core.getHeadBlockId();
+    }
+
+    public void refreshHeadInfo() {
+
+        BlockHandler handler = (BlockHandler) getHandler(BlockHandler.class);
+        exec.execute(handler::exchangeHeadBlockInfo);
     }
 
     private void getHosts() {
 
-        hosts = new ArrayList<>();
-        String[] trackers = config.getTrackers().split(",");
-
-        for(String tracker: trackers) {
-
-            try {
-
-                HostInfo info = HostInfo.createHostInfo(tracker, config);
-                SocketChannel sc = SocketChannel.open(new InetSocketAddress(info.getAddress(), info.getPort()));
-
-                ByteBuffer bb = ByteBuffer.allocate(2048);
-                sc.read(bb);
-                bb.flip();
-                String[] addresses = new String(bb.array()).split(",");
-
-                hosts.addAll(Arrays.stream(addresses).
-                        map((address) -> HostInfo.createHostInfo(address, config)).
-                        collect(Collectors.toList()));
-
-                if(hosts.size() >= config.getInitHosts()) break;
-
-            } catch (Exception ignored) {}
-        }
+        PeerHandler handler = (PeerHandler) getHandler(PeerHandler.class);
+        handler.getHosts(hosts, config);
     }
 
     @SneakyThrows
-    public void listenForMessages() {
+    private void listenForMessages() {
 
-        Runnable listen = () -> {
-
-            while (online) {
-                log.debug("Listening...");
-                SocketChannel sc = incomingMessageSocket.accept();
-                processIncomingMessage(sc);
-            }
-        };
-        exec.execute(listen);
+        while (doConnect) {
+            log.debug("Listening...");
+            SocketChannel sc = incomingMessageSocket.accept();
+            processIncomingMessage(sc);
+        }
     }
 
     @SneakyThrows
@@ -126,44 +133,22 @@ public class P2PService {
             InitMessage message = InitMessage.parse(new String(bf.array()));
             log.debug("Incoming message " + message.toString());
 
-            handlers.stream().filter(handler -> handler.getType() == message.getType()).
-                    collect(Collectors.toList()).get(0).handleIncomingMessage(message, sc);
+            handlers.stream()
+                    .filter(handler -> handler.canHandle(message.getType()))
+                    .forEach(handler -> handler.handleIncomingMessage(message, sc));
         };
 
         exec.execute(processMessage);
     }
 
-    @SneakyThrows
-    private List<Block> readBlocksFromSocket(SocketChannel sc) {
+    public MessageHandler getHandler(Class handlerClass) {
 
-        ByteBuffer bf = ByteBuffer.allocate(Integer.BYTES);
-        sc.read(bf);
-        bf.flip();
-        int size = bf.getInt();
-
-        bf = ByteBuffer.allocate(size);
-        sc.read(bf);
-        bf.flip();
-
-        String data = new String(bf.array());
-        ObjectMapper mapper = new ObjectMapper();
-        return mapper.readValue(data, List.class);
+        return handlers.stream()
+                .filter(handler -> handler.getClass() == handlerClass)
+                .findFirst().get();
     }
 
-    @SneakyThrows
-    private void writeBlocksToSocket(List<Block> blocks, SocketChannel sc) {
-
-        ObjectMapper mapper = new ObjectMapper();
-        String data = mapper.writeValueAsString(blocks);
-
-        ByteBuffer bf = ByteBuffer.allocate(Integer.BYTES);
-        bf.putInt(data.getBytes().length);
-        bf.flip();
-        while(bf.hasRemaining()) sc.write(bf);
-
-        bf = ByteBuffer.allocate(data.getBytes().length);
-        bf.put(data.getBytes());
-        bf.flip();
-        while(bf.hasRemaining()) sc.write(bf);
+    public static Map<String, HostInfo> hosts() {
+        return hosts;
     }
 }
