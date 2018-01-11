@@ -1,6 +1,6 @@
 package konra.reno;
 
-import konra.reno.util.Crypto;
+import konra.reno.crypto.Crypto;
 
 import static org.junit.Assert.*;
 import org.junit.Test;
@@ -8,7 +8,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.test.context.SpringBootTest;
 
-import javax.xml.bind.DatatypeConverter;
 import java.security.*;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;

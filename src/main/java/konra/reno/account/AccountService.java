@@ -1,15 +1,13 @@
 package konra.reno.account;
 
 import konra.reno.p2p.P2PService;
-import konra.reno.util.Crypto;
+import konra.reno.crypto.Crypto;
 import konra.reno.util.FileService;
 import konra.reno.util.KeysDto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.security.KeyPair;
-import java.util.HashMap;
-import java.util.concurrent.Executors;
 
 @Service
 public class AccountService {
