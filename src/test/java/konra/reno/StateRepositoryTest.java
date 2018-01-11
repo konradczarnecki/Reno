@@ -1,8 +1,8 @@
 package konra.reno;
 
 import konra.reno.account.Account;
-import konra.reno.blockchain.Block;
-import konra.reno.blockchain.StateRepository;
+import konra.reno.core.Block;
+import konra.reno.core.persistance.StateRepository;
 import org.junit.Test;
 import static org.junit.Assert.*;
 

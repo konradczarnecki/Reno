@@ -1,7 +1,7 @@
 package konra.reno.miner;
 
-import konra.reno.blockchain.Block;
-import konra.reno.blockchain.CoreService;
+import konra.reno.core.Block;
+import konra.reno.core.CoreService;
 import konra.reno.util.FileService;
 import konra.reno.transaction.Transaction;
 import org.slf4j.Logger;

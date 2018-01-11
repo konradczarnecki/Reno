@@ -1,5 +1,6 @@
-package konra.reno.blockchain;
+package konra.reno.core.persistance;
 
+import konra.reno.core.Block;
 import org.springframework.data.mongodb.repository.MongoRepository;
 
 import java.util.List;

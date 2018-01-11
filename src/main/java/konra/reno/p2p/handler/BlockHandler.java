@@ -1,8 +1,8 @@
 package konra.reno.p2p.handler;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import konra.reno.blockchain.Block;
-import konra.reno.blockchain.CoreService;
+import konra.reno.core.Block;
+import konra.reno.core.CoreService;
 import konra.reno.p2p.HostInfo;
 import konra.reno.p2p.P2PService;
 import konra.reno.p2p.message.InitMessage;
@@ -89,7 +89,7 @@ public class BlockHandler implements MessageHandler {
     }
 
     @SneakyThrows
-    public void requestBlocks(HostInfo host) {
+    public List<Block> requestBlocks(HostInfo host) {
 
         String message = InitMessage.create(MessageType.BLOCK_REQUEST, core.getHeadBlockId()).data();
 
@@ -102,9 +102,7 @@ public class BlockHandler implements MessageHandler {
         while (bf.hasRemaining()) sc.write(bf);
         log.debug("Block request message sent.");
 
-        List<Block> blocks = readBlocksFromSocket(sc);
-
-
+        return readBlocksFromSocket(sc);
     }
 
     @SneakyThrows

@@ -1,6 +1,6 @@
 package konra.reno.p2p.handler;
 
-import konra.reno.blockchain.CoreService;
+import konra.reno.core.CoreService;
 import konra.reno.p2p.message.InitMessage;
 import konra.reno.p2p.message.MessageType;
 import lombok.AccessLevel;
@@ -11,7 +11,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.nio.channels.SocketChannel;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;

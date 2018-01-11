@@ -1,6 +1,7 @@
 package konra.reno.p2p;
 
-import konra.reno.blockchain.CoreService;
+import konra.reno.core.Block;
+import konra.reno.core.CoreService;
 import konra.reno.p2p.handler.BlockHandler;
 import konra.reno.p2p.handler.MessageHandler;
 import konra.reno.p2p.handler.PeerHandler;
@@ -27,7 +28,11 @@ import java.util.concurrent.ScheduledExecutorService;
 @Slf4j
 public class P2PService {
 
-    static Map<String, HostInfo> hosts;
+    private static Map<String, HostInfo> hosts;
+
+    static {
+        hosts = new HashMap<>();
+    }
 
     CoreService core;
     P2PConfig config;
@@ -38,6 +43,8 @@ public class P2PService {
 
     ServerSocketChannel incomingMessageSocket;
     boolean doConnect;
+    boolean doSync;
+    boolean bulkDownload;
 
     @Autowired
     public P2PService(CoreService core, P2PConfig config) {
@@ -49,9 +56,11 @@ public class P2PService {
     @SneakyThrows
     public void init() {
 
-        core.registerSyncCallback(this::checkSync);
+        core.registerSyncCallback(this::refreshHeadInfo);
         exec = Executors.newScheduledThreadPool(10);
         doConnect = false;
+        doSync = false;
+        bulkDownload = false;
 
         incomingMessageSocket = ServerSocketChannel.open();
         incomingMessageSocket.socket().bind(new InetSocketAddress(config.getDefaultMessagePort()));
@@ -62,7 +71,14 @@ public class P2PService {
         doConnect = true;
         exec.execute(this::listenForMessages);
         exec.execute(this::getHosts);
-        refreshHeadInfo();
+    }
+
+    public void disconnect() {
+
+        doConnect = false;
+        doSync = false;
+        exec.shutdownNow();
+        exec = Executors.newScheduledThreadPool(10);
     }
 
     public Status checkConnect() {
@@ -80,17 +96,32 @@ public class P2PService {
 
     public void synchronize() {
 
+        doSync = true;
         Status status = checkConnect();
 
-        if(status.getConnectedHosts() == 0) throw new IllegalStateException("No connected hosts to synchronize with.");
+        if(status.getConnectedHosts() == 0 || status.getHostCount() == 0)
+            throw new IllegalStateException("No connected hosts to synchronize with.");
+
+        exec.execute(this::sync);
+    }
+
+    private void sync() {
+
         if(checkSync()) return;
 
         BlockHandler blockHandler = (BlockHandler) getHandler(BlockHandler.class);
-        blockHandler.requestBlocks();
+        PeerHandler peerHandler = (PeerHandler) getHandler(PeerHandler.class);
 
+        HostInfo host = peerHandler.resolvePeerWithBlock(core.getHeadBlockId() + 1);
+        List<Block> blocks = blockHandler.requestBlocks(host);
+        core.processIncomingBlocks(blocks);
+
+        if(doSync) sync();
     }
 
     public boolean checkSync() {
+
+        if(!bulkDownload) refreshHeadInfo();
 
         HostInfo headHost = hosts.values().stream()
                 .filter(host -> host.getHeadId() != -1)
@@ -103,7 +134,7 @@ public class P2PService {
     public void refreshHeadInfo() {
 
         BlockHandler handler = (BlockHandler) getHandler(BlockHandler.class);
-        exec.execute(handler::exchangeHeadBlockInfo);
+        handler.exchangeHeadBlockInfo();
     }
 
     private void getHosts() {

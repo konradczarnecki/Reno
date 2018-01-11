@@ -13,22 +13,28 @@ import java.security.*;
 @Document(collection = "state")
 @NoArgsConstructor
 @EqualsAndHashCode
+@ToString
 @Getter @Setter
 public class Account {
 
     private static KeyPair lastKeys;
 
     @Id
-    @Field("address")
-    private String address;
+    @Field("address") private String address;
+    @Field("balance") private double balance;
 
-    @Field("balance")
-    private double balance;
-
-    private Account(String address){
+    public Account(String address){
 
         this.address = address;
         this.balance = 0;
+    }
+
+    public void add(double amount) {
+        this.balance += amount;
+    }
+
+    public void subtract(double amount) {
+        this.balance -= amount;
     }
 
     @SneakyThrows
@@ -46,8 +52,4 @@ public class Account {
         return keys;
     }
 
-    public String toString(){
-
-        return this.address + ":" + this.balance;
-    }
 }

@@ -1,6 +1,6 @@
 package konra.reno.p2p.handler;
 
-import konra.reno.blockchain.CoreService;
+import konra.reno.core.CoreService;
 import konra.reno.p2p.HostInfo;
 import konra.reno.p2p.P2PConfig;
 import konra.reno.p2p.P2PService;
@@ -71,5 +71,13 @@ public class PeerHandler implements MessageHandler {
 
             } catch (Exception ignored) {}
         }
+    }
+
+    public HostInfo resolvePeerWithBlock(long blockId) {
+
+        return P2PService.hosts().entrySet().stream()
+                .map(Map.Entry::getValue)
+                .filter(hostInfo -> hostInfo.getHeadId() >= blockId)
+                .min((host1, host2) -> (int) (host1.getHeadId() - host2.getHeadId())).get();
     }
 }
