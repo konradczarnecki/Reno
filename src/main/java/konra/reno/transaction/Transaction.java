@@ -2,28 +2,35 @@ package konra.reno.transaction;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import konra.reno.crypto.Crypto;
+import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.SneakyThrows;
+import lombok.experimental.FieldDefaults;
+import org.apache.commons.codec.digest.Crypt;
 
 import java.util.Date;
 
+@FieldDefaults(level = AccessLevel.PRIVATE)
+@Getter
 public class Transaction {
 
-    @Getter private long timestamp;
-    @Getter private String sender;
-    @Getter private String receiver;
-    @Getter private double amount;
-    @Getter private double fee;
-    @Getter private String message;
-    @Getter private String signature;
+    long timestamp;
+    String sender;
+    String receiver;
+    double amount;
+    double fee;
+    String message;
+    String signature;
 
-    private Transaction(String sender, String receiver, double amount, double fee) {
+    public Transaction(String sender, String receiver, double amount, double fee) {
 
         this.sender = sender;
         this.receiver = receiver;
         this.amount = amount;
         this.fee = fee;
         this.timestamp = new Date().getTime();
+        this.message = "";
     }
 
     public Transaction(String sender, String receiver, Double amount, double fee, String message){
@@ -32,7 +39,12 @@ public class Transaction {
         this.message = message;
     }
 
-    private Transaction() {}
+    public boolean sign(String privateKey) {
+
+        if(!Crypto.testKeys(sender, privateKey)) return false;
+        signature = Crypto.sign(privateKey, hash());
+        return true;
+    }
 
     @SneakyThrows
     public String data() {
@@ -51,7 +63,7 @@ public class Transaction {
             append(fee).
             append(message);
 
-        return Crypto.hashHex(sb.toString());
+        return Crypto.hash(sb.toString());
     }
 
     @SneakyThrows
@@ -63,6 +75,6 @@ public class Transaction {
 
     public static boolean validate(Transaction t) {
 
-        return true;
+        return Crypto.verifySignature(t.signature, t.sender, t.hash());
     }
 }

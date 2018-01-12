@@ -3,6 +3,7 @@ package konra.reno.p2p.handler;
 import konra.reno.core.CoreService;
 import konra.reno.p2p.message.InitMessage;
 import konra.reno.p2p.message.MessageType;
+import konra.reno.transaction.Transaction;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.experimental.FieldDefaults;
@@ -26,11 +27,17 @@ public class TransactionHandler implements MessageHandler {
     @Autowired
     public TransactionHandler(CoreService core) {
         this.core = core;
+        core.setTransactionCallback(this::announceTransaction);
         types = new HashSet<>(Collections.singletonList(MessageType.TRANSACTION));
     }
 
     @Override
     public void handleIncomingMessage(InitMessage message, SocketChannel sc) {
 
+    }
+
+    public void announceTransaction(Transaction transaction) {
+
+        String message = InitMessage.create(MessageType.TRANSACTION, transaction).data();
     }
 }

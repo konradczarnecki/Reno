@@ -5,6 +5,7 @@ import konra.reno.core.persistance.BlockRepository;
 import konra.reno.core.persistance.StateRepository;
 import konra.reno.core.reward.RewardConfig;
 import konra.reno.transaction.Transaction;
+import konra.reno.transaction.TransactionPool;
 import konra.reno.util.FileService;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -18,6 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 @Service
@@ -30,10 +32,12 @@ public class CoreService {
     RewardConfig rewardConfig;
     CoreConfig config;
     FileService fileService;
-
     ScheduledExecutorService exec;
-    Runnable syncCallback;
 
+    @Setter Runnable headSyncCallback;
+    @Setter Consumer transactionCallback;
+
+    TransactionPool transactionPool;
     @Getter long headBlockId;
     @Getter @Setter long networkHead;
 
@@ -49,6 +53,7 @@ public class CoreService {
         this.stateRepository = stateRepository;
         this.rewardConfig = rewardConfig;
         this.config = config;
+        this.transactionPool = new TransactionPool();
         exec  = Executors.newScheduledThreadPool(10);
     }
 
@@ -62,15 +67,10 @@ public class CoreService {
         return true;
     }
 
-    public void registerSyncCallback(Runnable callback) {
-
-        syncCallback = callback;
-    }
-
     public void setHeadBlockId(long id) {
 
         headBlockId = id;
-        exec.execute(syncCallback);
+        exec.execute(headSyncCallback);
     }
 
     public List<Block> getBlocks(long fromId, long toId) {
@@ -193,5 +193,12 @@ public class CoreService {
 
     public boolean rollbackFromBlock(long blockId) {
         return true;
+    }
+
+    public void addNewTransaction(Transaction transaction) {
+
+        transactionPool.addPending(transaction);
+        Runnable announceTransaction = () -> transactionCallback.accept(transaction);
+        exec.execute(announceTransaction);
     }
 }

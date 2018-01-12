@@ -8,6 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @NoArgsConstructor
 @ToString
+@EqualsAndHashCode
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Getter @Setter
 @Slf4j
@@ -41,7 +42,7 @@ public class InitMessage {
 
         } else if(type == MessageType.TRANSACTION) {
             Transaction transaction = (Transaction) payload;
-            message.setPayload(transaction.data().getBytes().length);
+            message.setPayload(transaction.data());
         }
 
         return message;

@@ -1,18 +1,12 @@
 package konra.reno.crypto;
 
 import konra.reno.util.KeysDto;
-import lombok.SneakyThrows;
-import org.apache.commons.codec.binary.Base64;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import javax.crypto.Cipher;
-import javax.crypto.spec.IvParameterSpec;
-import javax.crypto.spec.SecretKeySpec;
-import javax.xml.bind.DatatypeConverter;
-import java.nio.charset.StandardCharsets;
-import java.security.*;
-
+/**
+ * Static wrapper for cryptographic engine.
+ */
 @Service
 public class Crypto {
 
@@ -23,31 +17,39 @@ public class Crypto {
         Crypto.engine = engine;
     }
 
-    public static String encryptHexSymetric(String key, String value) {
-        return engine.encryptHexSymetric(key, value);
+    public static String encryptHexSymmetric(String key, String value) {
+        return engine.encryptHexSymmetric(key, value);
     }
 
-    public static String decryptHexSymetric(String key, String encrypted) {
-        return engine.decryptHexSymetric(key, encrypted);
+    public static String decryptHexSymmetric(String key, String encrypted) {
+        return engine.decryptHexSymmetric(key, encrypted);
     }
 
     public static KeysDto keyPair() {
         return engine.keyPair();
     }
 
-    public static String encryptHexAsymetric(String publicKey, String value) {
-        return engine.encryptHexAsymetric(publicKey, value);
+    public static boolean testKeys(String publicKey, String privateKey) {
+        return engine.testKeys(publicKey, privateKey);
     }
 
-    public static String decryptHexAsymetric(String privateKey, String encrypted) {
-        return engine.decryptHexAsymetric(privateKey, encrypted);
+    public static String encryptHexAsymmetric(String publicKey, String value) {
+        return engine.encryptHexAsymmetric(publicKey, value);
     }
 
-    public String sign(String privateKey, String hash){
+    public static String decryptHexAsymmetric(String privateKey, String encrypted) {
+        return engine.decryptHexAsymmetric(privateKey, encrypted);
+    }
+
+    public static String sign(String privateKey, String hash) {
         return engine.sign(privateKey, hash);
     }
 
-    public static String hash(String raw){
+    public static boolean verifySignature(String signature, String publicKey, String hash) {
+        return engine.verifySignature(signature, publicKey, hash);
+    }
+
+    public static String hash(String raw) {
         return engine.hash(raw);
     }
 

@@ -26,28 +26,6 @@ public class StateRepositoryTest {
     @Autowired
     MongoTemplate template;
 
-    @Test
-    public void test() {
-
-        Account ac = Account.create();
-        KeyPair keys = Account.popLastKeys();
-
-        ac.setBalance(50);
-
-        repository.save(ac);
-
-        Account ac2 = repository.getAccountByAddress(DatatypeConverter.printHexBinary(keys.getPublic().getEncoded()));
-
-        assertEquals(ac, ac2);
-    }
-
-    @Test
-    public void testRead() {
-
-        List<Account> ac = repository.getAllByAddressNotNull();
-
-        assertEquals(ac.size(), 1);
-    }
 
     @Test
     public void testTemplate() {

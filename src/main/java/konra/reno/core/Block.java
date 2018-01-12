@@ -70,7 +70,7 @@ public class Block {
             transactionsHashCache = transactionsHash.toString();
         }
 
-        hashCache = Crypto.hashHex(String.valueOf(id) + nonce + transactionsHashCache + previousPOW);
+        hashCache = Crypto.hash(String.valueOf(id) + nonce + transactionsHashCache + previousPOW);
 
         return hashCache;
     }

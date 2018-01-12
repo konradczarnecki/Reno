@@ -1,7 +1,10 @@
 package konra.reno.crypto;
 
 import konra.reno.util.KeysDto;
+import lombok.AccessLevel;
+import lombok.Data;
 import lombok.SneakyThrows;
+import lombok.experimental.FieldDefaults;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -15,6 +18,7 @@ import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
 
 @Service
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class SimpleCryptoEngine implements CryptoEngine {
 
     private static String initVector = "24cd5de2a352a857";
@@ -27,49 +31,31 @@ public class SimpleCryptoEngine implements CryptoEngine {
     }
 
     @Override
-    public String encryptHexSymetric(String key, String value) {
+    @SneakyThrows
+    public String encryptHexSymmetric(String key, String value) {
 
-        try {
+        IvParameterSpec iv = new IvParameterSpec(initVector.getBytes("UTF-8"));
+        SecretKeySpec keySpec = new SecretKeySpec(key.getBytes("UTF-8"), "AES");
 
-            IvParameterSpec iv = new IvParameterSpec(initVector.getBytes("UTF-8"));
-            SecretKeySpec keySpec = new SecretKeySpec(key.getBytes("UTF-8"), "AES");
+        Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5PADDING");
+        cipher.init(Cipher.ENCRYPT_MODE, keySpec, iv);
+        byte[] encrypted = cipher.doFinal(value.getBytes());
 
-            Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5PADDING");
-            cipher.init(Cipher.ENCRYPT_MODE, keySpec, iv);
-
-            byte[] encrypted = cipher.doFinal(value.getBytes());
-
-            return DatatypeConverter.printHexBinary(encrypted);
-
-        } catch (Exception ex) {
-
-            ex.printStackTrace();
-        }
-
-        return null;
+        return DatatypeConverter.printHexBinary(encrypted);
     }
 
     @Override
-    public String decryptHexSymetric(String key, String encrypted) {
+    @SneakyThrows
+    public String decryptHexSymmetric(String key, String encrypted) {
 
-        try {
+        IvParameterSpec iv = new IvParameterSpec(initVector.getBytes("UTF-8"));
+        SecretKeySpec keySpec = new SecretKeySpec(key.getBytes("UTF-8"), "AES");
 
-            IvParameterSpec iv = new IvParameterSpec(initVector.getBytes("UTF-8"));
-            SecretKeySpec keySpec = new SecretKeySpec(key.getBytes("UTF-8"), "AES");
+        Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5PADDING");
+        cipher.init(Cipher.DECRYPT_MODE, keySpec, iv);
+        byte[] original = cipher.doFinal(DatatypeConverter.parseHexBinary(encrypted));
 
-            Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5PADDING");
-            cipher.init(Cipher.DECRYPT_MODE, keySpec, iv);
-
-            byte[] original = cipher.doFinal(DatatypeConverter.parseHexBinary(encrypted));
-
-            return new String(original);
-
-        } catch (Exception ex) {
-
-            ex.printStackTrace();
-        }
-
-        return null;
+        return new String(original);
     }
 
     @Override
@@ -87,8 +73,15 @@ public class SimpleCryptoEngine implements CryptoEngine {
     }
 
     @Override
+    public boolean testKeys(String privateKey, String publicKey) {
+
+        String testSign = Crypto.sign(privateKey, "test");
+        return Crypto.verifySignature(testSign, publicKey, "test");
+    }
+
+    @Override
     @SneakyThrows
-    public String encryptHexAsymetric(String publicKey, String message) {
+    public String encryptHexAsymmetric(String publicKey, String message) {
 
         Cipher cipher = Cipher.getInstance("RSA");
         cipher.init(Cipher.ENCRYPT_MODE, getPublicKey(publicKey));
@@ -97,7 +90,7 @@ public class SimpleCryptoEngine implements CryptoEngine {
 
     @Override
     @SneakyThrows
-    public String decryptHexAsymetric(String privateKey, String encrypted) {
+    public String decryptHexAsymmetric(String privateKey, String encrypted) {
 
         Cipher cipher = Cipher.getInstance("RSA");
         cipher.init(Cipher.DECRYPT_MODE, getPrivateKey(privateKey));
@@ -113,13 +106,22 @@ public class SimpleCryptoEngine implements CryptoEngine {
     }
 
     @Override
+    @SneakyThrows
     public String sign(String privateKey, String hash) {
-        return null;
+
+        Signature sig = Signature.getInstance("SHA256withRSA");
+        sig.initSign(getPrivateKey(privateKey));
+        sig.update(hash.getBytes());
+        return DatatypeConverter.printHexBinary(sig.sign());
     }
 
     @Override
-    public boolean checkSignature(String signature, String publicKey) {
-        return false;
+    @SneakyThrows
+    public boolean verifySignature(String signature, String publicKey, String hash) {
+
+        Signature sig = Signature.getInstance("SHA256withRSA");
+        sig.initVerify(getPublicKey(publicKey));
+        return sig.verify(DatatypeConverter.parseHexBinary(signature));
     }
 
     @SneakyThrows

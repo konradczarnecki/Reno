@@ -1,26 +1,28 @@
 package konra.reno.account;
 
 import konra.reno.crypto.Crypto;
+import konra.reno.util.KeysDto;
 import lombok.*;
+import lombok.experimental.FieldDefaults;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.Transient;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
-
-import javax.xml.bind.DatatypeConverter;
-import java.security.*;
-
+@Builder
 @Document(collection = "state")
-@NoArgsConstructor
 @EqualsAndHashCode
+@AllArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE)
 @ToString
 @Getter @Setter
 public class Account {
 
-    private static KeyPair lastKeys;
-
     @Id
-    @Field("address") private String address;
-    @Field("balance") private double balance;
+    @Field("address") String address;
+    @Field("balance") double balance;
+
+    @Transient
+    KeysDto keys;
 
     public Account(String address){
 
@@ -39,16 +41,12 @@ public class Account {
     @SneakyThrows
     public static Account create(){
 
-        lastKeys = Crypto.keyPair();
-        String address = DatatypeConverter.printHexBinary(lastKeys.getPublic().getEncoded());
-        return new Account(address);
+        KeysDto keys = Crypto.keyPair();
+
+        return builder()
+                .address(keys.getPublicKey())
+                .balance(0)
+                .keys(keys)
+                .build();
     }
-
-    public static KeyPair popLastKeys(){
-
-        KeyPair keys = lastKeys;
-        lastKeys = null;
-        return keys;
-    }
-
 }

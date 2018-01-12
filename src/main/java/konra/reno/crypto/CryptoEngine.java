@@ -4,12 +4,13 @@ import konra.reno.util.KeysDto;
 
 public interface CryptoEngine {
 
-    String encryptHexSymetric(String key, String value);
-    String decryptHexSymetric(String key, String encrypted);
+    String encryptHexSymmetric(String key, String value);
+    String decryptHexSymmetric(String key, String encrypted);
     KeysDto keyPair();
-    String encryptHexAsymetric(String publicKey, String value);
-    String decryptHexAsymetric(String privateKey, String encrypted);
+    boolean testKeys(String publicKey, String privateKey);
+    String encryptHexAsymmetric(String publicKey, String value);
+    String decryptHexAsymmetric(String privateKey, String encrypted);
     String hash(String raw);
     String sign(String privateKey, String hash);
-    boolean checkSignature(String signature, String publicKey);
+    boolean verifySignature(String signature, String publicKey, String hash);
 }

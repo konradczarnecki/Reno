@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
+import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.ServerSocketChannel;
@@ -56,7 +57,7 @@ public class P2PService {
     @SneakyThrows
     public void init() {
 
-        core.registerSyncCallback(this::refreshHeadInfo);
+        core.setHeadSyncCallback(this::refreshHeadInfo);
         exec = Executors.newScheduledThreadPool(10);
         doConnect = false;
         doSync = false;
@@ -116,7 +117,7 @@ public class P2PService {
         List<Block> blocks = blockHandler.requestBlocks(host);
         core.processIncomingBlocks(blocks);
 
-        if(doSync) sync();
+        if(doSync) exec.execute(this::sync);
     }
 
     public boolean checkSync() {
@@ -153,13 +154,15 @@ public class P2PService {
         }
     }
 
-    @SneakyThrows
     private void processIncomingMessage(SocketChannel sc) {
 
         Runnable processMessage = () -> {
 
             ByteBuffer bf = ByteBuffer.allocate(2048);
-            sc.read(bf);
+            try {
+                sc.read(bf);
+            } catch (Exception e) { throw new RuntimeException("Processing message exception"); }
+
             bf.flip();
             InitMessage message = InitMessage.parse(new String(bf.array()));
             log.debug("Incoming message " + message.toString());
