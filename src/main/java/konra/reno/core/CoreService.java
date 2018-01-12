@@ -1,6 +1,8 @@
 package konra.reno.core;
 
 import konra.reno.account.Account;
+import konra.reno.core.callback.CallbackHandler;
+import konra.reno.core.callback.CallbackType;
 import konra.reno.core.persistance.BlockRepository;
 import konra.reno.core.persistance.StateRepository;
 import konra.reno.core.reward.RewardConfig;
@@ -32,12 +34,10 @@ public class CoreService {
     RewardConfig rewardConfig;
     CoreConfig config;
     FileService fileService;
+    CallbackHandler callbackHandler;
     ScheduledExecutorService exec;
 
-    @Setter Runnable headSyncCallback;
-    @Setter Consumer transactionCallback;
-
-    TransactionPool transactionPool;
+    @Getter TransactionPool transactionPool;
     @Getter long headBlockId;
     @Getter @Setter long networkHead;
 
@@ -46,12 +46,14 @@ public class CoreService {
                        StateRepository stateRepository,
                        RewardConfig rewardConfig,
                        CoreConfig config,
+                       CallbackHandler callbackHandler,
                        FileService fileService) {
 
         this.fileService = fileService;
         this.blockRepository = blockRepository;
         this.stateRepository = stateRepository;
         this.rewardConfig = rewardConfig;
+        this.callbackHandler = callbackHandler;
         this.config = config;
         this.transactionPool = new TransactionPool();
         exec  = Executors.newScheduledThreadPool(10);
@@ -70,7 +72,7 @@ public class CoreService {
     public void setHeadBlockId(long id) {
 
         headBlockId = id;
-        exec.execute(headSyncCallback);
+        callbackHandler.execute(CallbackType.HEAD_EXCHANGE);
     }
 
     public List<Block> getBlocks(long fromId, long toId) {
@@ -198,7 +200,6 @@ public class CoreService {
     public void addNewTransaction(Transaction transaction) {
 
         transactionPool.addPending(transaction);
-        Runnable announceTransaction = () -> transactionCallback.accept(transaction);
-        exec.execute(announceTransaction);
+        callbackHandler.execute(CallbackType.TRANSACTION, transaction);
     }
 }

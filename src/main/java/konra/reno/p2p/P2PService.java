@@ -2,6 +2,8 @@ package konra.reno.p2p;
 
 import konra.reno.core.Block;
 import konra.reno.core.CoreService;
+import konra.reno.core.callback.CallbackHandler;
+import konra.reno.core.callback.CallbackType;
 import konra.reno.p2p.handler.BlockHandler;
 import konra.reno.p2p.handler.MessageHandler;
 import konra.reno.p2p.handler.PeerHandler;
@@ -37,6 +39,7 @@ public class P2PService {
 
     CoreService core;
     P2PConfig config;
+    CallbackHandler callbackHandler;
 
     @Resource
     List<MessageHandler> handlers;
@@ -48,16 +51,17 @@ public class P2PService {
     boolean bulkDownload;
 
     @Autowired
-    public P2PService(CoreService core, P2PConfig config) {
+    public P2PService(CoreService core, P2PConfig config, CallbackHandler callbackHandler) {
         this.core = core;
         this.config = config;
+        this.callbackHandler = callbackHandler;
     }
 
     @PostConstruct
     @SneakyThrows
     public void init() {
 
-        core.setHeadSyncCallback(this::refreshHeadInfo);
+        callbackHandler.register(CallbackType.HEAD_EXCHANGE, this::refreshHeadInfo);
         exec = Executors.newScheduledThreadPool(10);
         doConnect = false;
         doSync = false;

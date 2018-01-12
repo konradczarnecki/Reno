@@ -66,6 +66,13 @@ public class Transaction {
         return Crypto.hash(sb.toString());
     }
 
+    public boolean equals(Object o) {
+
+        if(o == null || o.getClass() != getClass()) return false;
+        Transaction other = (Transaction) o;
+        return this.hash().equals(other.hash());
+    }
+
     @SneakyThrows
     public static Transaction parse(String data) {
 

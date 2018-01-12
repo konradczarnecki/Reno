@@ -2,6 +2,7 @@ package konra.reno.transaction;
 
 import lombok.AccessLevel;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.experimental.FieldDefaults;
 
 import java.util.HashSet;
@@ -11,7 +12,7 @@ import java.util.Set;
 @Getter
 public class TransactionPool {
 
-    boolean fillPool;
+    @Setter boolean fillPool;
     Set<Transaction> pool;
     Set<Transaction> pending;
 
@@ -24,5 +25,13 @@ public class TransactionPool {
 
     public void addPending(Transaction t) {
         pending.add(t);
+    }
+
+    public boolean checkIfPending(Transaction t) {
+        return pending.contains(t);
+    }
+
+    public void addToPool(Transaction t) {
+        if(fillPool) pool.add(t);
     }
 }
