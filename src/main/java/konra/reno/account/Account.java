@@ -19,8 +19,8 @@ import org.springframework.data.mongodb.core.mapping.Field;
 public class Account {
 
     @Id
-    @Field("address") String address;
-    @Field("balance") double balance;
+    String address;
+    double balance;
 
     @Transient
     KeysDto keys;

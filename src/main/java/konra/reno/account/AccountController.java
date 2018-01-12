@@ -23,6 +23,17 @@ public class AccountController {
     @GetMapping("/new-account")
     public Response<KeysDto> newAccount() {
 
+        Account account = service.createAccount();
+        Response<KeysDto> rsp = new Response<>();
+        rsp.setStatus("success");
+        rsp.setContent(account.getKeys());
+        return rsp;
+    }
 
+    @GetMapping("/login")
+    public Response login(String publicKey, String privateKey) {
+
+        boolean result = service.login(publicKey, privateKey);
+        return result ? Response.success() : Response.failure();
     }
 }

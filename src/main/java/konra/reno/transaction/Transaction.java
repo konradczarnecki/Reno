@@ -1,5 +1,8 @@
 package konra.reno.transaction;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonGetter;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import konra.reno.crypto.Crypto;
 import lombok.AccessLevel;
@@ -21,28 +24,29 @@ public class Transaction {
     double amount;
     double fee;
     String message;
+    String hash;
     String signature;
 
-    public Transaction(String sender, String receiver, double amount, double fee) {
+    @JsonCreator
+    public Transaction(@JsonProperty("sender") String sender,
+                       @JsonProperty("receiver") String receiver,
+                       @JsonProperty("amount") double amount,
+                       @JsonProperty("fee") double fee,
+                       @JsonProperty("message") String message) {
 
         this.sender = sender;
         this.receiver = receiver;
         this.amount = amount;
         this.fee = fee;
-        this.timestamp = new Date().getTime();
-        this.message = "";
-    }
-
-    public Transaction(String sender, String receiver, Double amount, double fee, String message){
-
-        this(sender, receiver, amount, fee);
         this.message = message;
+        this.timestamp = new Date().getTime();
     }
 
     public boolean sign(String privateKey) {
 
         if(!Crypto.testKeys(sender, privateKey)) return false;
-        signature = Crypto.sign(privateKey, hash());
+        hash = hash();
+        signature = Crypto.sign(privateKey, hash);
         return true;
     }
 
@@ -53,7 +57,7 @@ public class Transaction {
         return mapper.writeValueAsString(this);
     }
 
-    public String hash() {
+    private String hash() {
 
         StringBuilder sb = new StringBuilder().
             append(timestamp).

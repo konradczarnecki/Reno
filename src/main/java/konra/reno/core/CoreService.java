@@ -8,6 +8,7 @@ import konra.reno.core.persistance.StateRepository;
 import konra.reno.core.reward.RewardConfig;
 import konra.reno.transaction.Transaction;
 import konra.reno.transaction.TransactionPool;
+import konra.reno.transaction.TransactionService;
 import konra.reno.util.FileService;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -21,8 +22,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.function.Consumer;
-import java.util.stream.Collectors;
 
 @Service
 @FieldDefaults(level = AccessLevel.PRIVATE)
@@ -104,7 +103,7 @@ public class CoreService {
         List<Transaction> transactions = block.getTransactions();
         if(!transactions.stream().allMatch(Transaction::validate)) return false;
 
-        Map<String, Double> summedMap = getSummedTransactionsMap(transactions);
+        Map<String, Double> summedMap = TransactionService.getSummedTxMap(transactions);
 
         for(Map.Entry<String, Double> entry: summedMap.entrySet()) {
 
@@ -112,42 +111,21 @@ public class CoreService {
             if(acc == null || acc.getBalance() < entry.getValue()) return false;
         }
 
-        return checkMinerTransaction(block);
-    }
-
-    private Map<String, Double> getSummedTransactionsMap(List<Transaction> transactions) {
-
-        Map<String, Double> summedMap = new HashMap<>();
-
-        transactions.stream().filter(transaction -> !transaction.getSender().equals(config.getSourceAccount())).forEach(transaction -> {
-
-            String sender = transaction.getSender();
-
-            if(summedMap.containsKey(sender)) summedMap.put(sender, summedMap.get(sender) + transaction.getAmount());
-            else summedMap.put(sender, 0d);
-        });
-
-        return summedMap;
-    }
-
-    private boolean checkMinerTransaction(Block block) {
-
-        List<Transaction> minerTransactionList = block.getTransactions().stream()
-                .filter(transaction -> transaction.getSender().equals(config.getSourceAccount()) && transaction.getAmount() != 0)
-                .collect(Collectors.toList());
-
-        if (minerTransactionList.size() != 1) return false;
-
-        Transaction minerTransaction = minerTransactionList.get(0);
-
-        return minerTransaction.getSender().equals(block.getMiner()) &&
-                !(minerTransaction.getAmount() != rewardConfig.getReward(block));
+        return true;
     }
 
     @Transactional
     protected void acceptBlock(Block block) {
 
         blockRepository.save(block);
+
+        Account miner = stateRepository.findAccountByAddress(block.getMiner());
+        if(miner == null) miner = new Account(block.getMiner());
+
+        miner.add(rewardConfig.getReward(block));
+        miner.add(TransactionService.collectFees(block.getTransactions()));
+        stateRepository.save(miner);
+
         block.getTransactions().forEach(this::applyTransaction);
         headBlockId = block.getId();
 
@@ -157,36 +135,15 @@ public class CoreService {
 
     private void applyTransaction(Transaction transaction) {
 
-        if(transaction.getSender().equals(config.getSourceAccount())) {
-
-            if(transaction.getAmount() == 0) applyNewAccountTransaction(transaction.getReceiver());
-            else applyMinerTransaction(transaction.getReceiver(), transaction.getAmount());
-
-        } else applyTransferTransaction(transaction);
-    }
-
-    @Transactional
-    protected void applyTransferTransaction(Transaction transaction) {
-
         Account sender = stateRepository.findAccountByAddress(transaction.getSender());
         Account receiver = stateRepository.findAccountByAddress(transaction.getReceiver());
 
+        if(receiver == null) receiver = new Account(transaction.getReceiver());
+
         sender.subtract(transaction.getAmount());
         receiver.add(transaction.getAmount());
-    }
-
-    @Transactional
-    protected void applyNewAccountTransaction(String address) {
-
-        Account acc = new Account(address);
-        stateRepository.save(acc);
-    }
-
-    @Transactional
-    protected void applyMinerTransaction(String minerAddress, Double amount) {
-
-        Account miner = stateRepository.findAccountByAddress(minerAddress);
-        miner.add(amount);
+        stateRepository.save(sender);
+        stateRepository.save(receiver);
     }
 
     public boolean rollbackLastBlock() {

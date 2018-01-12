@@ -16,11 +16,10 @@ public class Response<T> {
     }
 
     public static Response success(){
-
         return new Response<>("success");
     }
 
     public static Response failure(){
-        return new Response("failure");
+        return new Response<>("failure");
     }
 }

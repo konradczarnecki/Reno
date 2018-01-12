@@ -5,7 +5,9 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.FieldDefaults;
 
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 @FieldDefaults(level = AccessLevel.PRIVATE)
@@ -13,25 +15,25 @@ import java.util.Set;
 public class TransactionPool {
 
     @Setter boolean fillPool;
-    Set<Transaction> pool;
-    Set<Transaction> pending;
+    Map<String, Transaction> pool;
+    Map<String, Transaction> pending;
 
     public TransactionPool() {
 
         fillPool = false;
-        pool = new HashSet<>();
-        pending = new HashSet<>();
+        pool = new HashMap<>();
+        pending = new HashMap<>();
     }
 
     public void addPending(Transaction t) {
-        pending.add(t);
+        pending.put(t.getHash(), t);
     }
 
     public boolean checkIfPending(Transaction t) {
-        return pending.contains(t);
+        return pending.containsKey(t.getHash());
     }
 
     public void addToPool(Transaction t) {
-        if(fillPool) pool.add(t);
+        if(fillPool) pool.put(t.getHash(), t);
     }
 }

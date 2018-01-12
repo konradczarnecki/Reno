@@ -14,21 +14,21 @@ import org.springframework.data.mongodb.core.mapping.Field;
 import java.util.ArrayList;
 import java.util.List;
 
-@Document(collection = "block")
+@Document(collection = "blockchain")
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Getter @Setter
 @Slf4j
 public class Block {
 
     @Id
-    @Field("id") long id;
-    @Field("nonce") long nonce;
-    @Field("transactions") List<Transaction> transactions;
-    @Field("prevPOW") String previousPOW;
-    @Field("difficulty") int difficulty;
-    @Field("pow") String pow;
-    @Field("miner") String miner;
-    @Field("stateHash") String stateHash;
+    long id;
+    long nonce;
+    List<Transaction> transactions;
+    String previousPOW;
+    int difficulty;
+    String pow;
+    String miner;
+    String stateHash;
 
     @Transient String hashCache;
     @Transient String transactionsHashCache;
@@ -66,7 +66,7 @@ public class Block {
         if(transactionsHashCache.equals("")) {
 
             StringBuilder transactionsHash = new StringBuilder();
-            for(Transaction t : transactions) transactionsHash.append(t.hash());
+            for(Transaction t : transactions) transactionsHash.append(t.getHash());
             transactionsHashCache = transactionsHash.toString();
         }
 

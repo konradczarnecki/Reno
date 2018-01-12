@@ -75,8 +75,8 @@ public class SimpleCryptoEngine implements CryptoEngine {
     @Override
     public boolean testKeys(String privateKey, String publicKey) {
 
-        String testSign = Crypto.sign(privateKey, "test");
-        return Crypto.verifySignature(testSign, publicKey, "test");
+        String testSign = sign(privateKey, "test");
+        return verifySignature(testSign, publicKey, "test");
     }
 
     @Override
