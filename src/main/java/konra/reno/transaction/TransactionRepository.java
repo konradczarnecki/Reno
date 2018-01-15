@@ -14,6 +14,8 @@ import org.springframework.stereotype.Repository;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.function.Predicate;
+import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
 @Repository
@@ -32,16 +34,26 @@ public class TransactionRepository {
                 .orOperator(where("transactions.sender").is(address), where("transactions.receiver").is(address))
                 .and("id").gte(startingBlock);
 
-        Query query = new Query();
-        query.addCriteria(cr);
+        Predicate<Transaction> isRelevant = transaction ->
+                transaction.getSender().equals(address) || transaction.getReceiver().equals(address);
+
+        Query query = new Query().addCriteria(cr);
 
         return template.find(query, Block.class, "blockchain").stream()
                 .map(Block::getTransactions)
                 .flatMap(Collection::stream)
+                .filter(isRelevant)
                 .collect(Collectors.toList());
     }
 
     public Transaction getTxByHash(String hash) {
 
+        Criteria cr = where("transactions.hash").is(hash);
+        Query query = new Query().addCriteria(cr);
+
+        return template.findOne(query, Block.class, "blockchain")
+                .getTransactions().stream()
+                .filter(transaction -> transaction.getHash().equals(hash))
+                .findFirst().get();
     }
 }

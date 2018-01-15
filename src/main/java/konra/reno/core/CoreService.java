@@ -4,8 +4,9 @@ import konra.reno.account.Account;
 import konra.reno.core.callback.CallbackHandler;
 import konra.reno.core.callback.CallbackType;
 import konra.reno.core.persistance.BlockRepository;
+import konra.reno.core.persistance.RenoRepository;
 import konra.reno.core.persistance.StateRepository;
-import konra.reno.core.reward.RewardConfig;
+import konra.reno.core.reward.BlockConfiguration;
 import konra.reno.transaction.Transaction;
 import konra.reno.transaction.TransactionPool;
 import konra.reno.transaction.TransactionService;
@@ -30,20 +31,22 @@ public class CoreService {
 
     BlockRepository blockRepository;
     StateRepository stateRepository;
-    RewardConfig rewardConfig;
+    RenoRepository renoRepository;
+    BlockConfiguration blockConfiguration;
     CoreConfig config;
     FileService fileService;
-    CallbackHandler callbackHandler;
+    @Getter CallbackHandler callbackHandler;
     ScheduledExecutorService exec;
 
     @Getter TransactionPool transactionPool;
-    @Getter long headBlockId;
+    @Getter Block headBlock;
     @Getter @Setter long networkHead;
 
     @Autowired
     public CoreService(BlockRepository blockRepository,
                        StateRepository stateRepository,
-                       RewardConfig rewardConfig,
+                       RenoRepository renoRepository,
+                       BlockConfiguration blockConfiguration,
                        CoreConfig config,
                        CallbackHandler callbackHandler,
                        FileService fileService) {
@@ -51,7 +54,8 @@ public class CoreService {
         this.fileService = fileService;
         this.blockRepository = blockRepository;
         this.stateRepository = stateRepository;
-        this.rewardConfig = rewardConfig;
+        this.renoRepository = renoRepository;
+        this.blockConfiguration = blockConfiguration;
         this.callbackHandler = callbackHandler;
         this.config = config;
         this.transactionPool = new TransactionPool();
@@ -63,23 +67,28 @@ public class CoreService {
 
         Block initialBlock = new Block(null);
         blockRepository.save(initialBlock);
-        setHeadBlockId(initialBlock.getId());
+        setHeadBlock(initialBlock);
 
         return true;
     }
 
-    public void setHeadBlockId(long id) {
+    public void setHeadBlock(Block head) {
 
-        headBlockId = id;
+        headBlock = head;
         callbackHandler.execute(CallbackType.HEAD_EXCHANGE);
     }
 
-    public List<Block> getBlocks(long fromId, long toId) {
+    public List<Block> getBlocks(long fromId, long count) {
 
-        return blockRepository.findBlocksByIdBetween(fromId, toId);
+        return blockRepository.findBlocksByIdBetween(fromId, fromId + count);
     }
 
-    public void processIncomingBlocks(List<Block> incomingBlocks) {
+    public List<Block> getBlocks(long fromId) {
+
+        return blockRepository.findBlocksByIdIsGreaterThanEqual(fromId);
+    }
+
+    public void processNewBlocks(List<Block> incomingBlocks) {
 
         incomingBlocks.forEach(this::processBlock);
     }
@@ -94,16 +103,17 @@ public class CoreService {
         Block currentHead = blockRepository.findTopByOrderByIdDesc();
 
         return block.getId() - 1 == currentHead.getId() &&
-                Block.validate(block, currentHead.getPreviousPOW()) &&
+                block.getPreviousPOW().equals(currentHead.getPow()) &&
+                block.validate(blockConfiguration.getDifficulty(block)) &&
                 verifyTransactions(block);
     }
 
     private boolean verifyTransactions(Block block) {
 
-        List<Transaction> transactions = block.getTransactions();
+        Set<Transaction> transactions = block.getTransactions();
         if(!transactions.stream().allMatch(Transaction::validate)) return false;
 
-        Map<String, Double> summedMap = TransactionService.getSummedTxMap(transactions);
+        Map<String, Double> summedMap = TransactionService.getSummedSendersTxMap(transactions);
 
         for(Map.Entry<String, Double> entry: summedMap.entrySet()) {
 
@@ -122,14 +132,14 @@ public class CoreService {
         Account miner = stateRepository.findAccountByAddress(block.getMiner());
         if(miner == null) miner = new Account(block.getMiner());
 
-        miner.add(rewardConfig.getReward(block));
-        miner.add(TransactionService.collectFees(block.getTransactions()));
+        miner.add(blockConfiguration.getReward(block));
+        miner.add(TransactionService.getSummedFees(block.getTransactions()));
         stateRepository.save(miner);
 
         block.getTransactions().forEach(this::applyTransaction);
-        headBlockId = block.getId();
+        setHeadBlock(block);
 
-        if(!stateRepository.getCollectionHash("state").equals(block.getStateHash()))
+        if(!renoRepository.getCollectionHash("state").equals(block.getStateHash()))
             throw new RuntimeException("Verified block state hash mismatch.");
     }
 
@@ -147,7 +157,7 @@ public class CoreService {
     }
 
     public boolean rollbackLastBlock() {
-        return rollbackFromBlock(headBlockId);
+        return rollbackFromBlock(headBlock.getId());
     }
 
     public boolean rollbackFromBlock(long blockId) {

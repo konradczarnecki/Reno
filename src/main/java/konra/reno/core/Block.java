@@ -12,67 +12,68 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Document(collection = "blockchain")
 @FieldDefaults(level = AccessLevel.PRIVATE)
-@Getter @Setter
+@Getter
+@Setter
 @Slf4j
 public class Block {
 
     @Id
     long id;
     long nonce;
-    List<Transaction> transactions;
+    long timestamp;
+    Set<Transaction> transactions;
     String previousPOW;
-    int difficulty;
     String pow;
     String miner;
+    String message;
     String stateHash;
 
-    @Transient String hashCache;
-    @Transient String transactionsHashCache;
-
-    private Block() {
-
-        id = 1;
-        transactions = new ArrayList<>();
-        previousPOW = "";
-        hashCache = "";
-        transactionsHashCache = "";
-    }
+    @Transient
+    String transactionsHashCache;
 
     public Block(Block previousBlock) {
 
-        this();
-        difficulty = 3;
+        nonce = 0;
+        transactions = new HashSet<>();
+        pow = "";
+        transactionsHashCache = "";
 
-        if(previousBlock != null){
+        if (previousBlock != null) {
             id = previousBlock.id + 1;
             previousPOW = previousBlock.pow;
+        } else {
+            id = 1;
+            previousPOW = "";
         }
     }
 
     public void bumpNonce() {
 
+        if(nonce == Long.MAX_VALUE) nonce = 0;
         nonce++;
-        this.hashCache = "";
     }
 
     public String hash() {
 
-        if(!hashCache.equals("")) return hashCache;
-
-        if(transactionsHashCache.equals("")) {
+        if (transactionsHashCache.equals("")) {
 
             StringBuilder transactionsHash = new StringBuilder();
-            for(Transaction t : transactions) transactionsHash.append(t.getHash());
+            transactions.forEach(transaction -> transactionsHash.append(transaction.getHash()));
             transactionsHashCache = transactionsHash.toString();
         }
 
-        hashCache = Crypto.hash(String.valueOf(id) + nonce + transactionsHashCache + previousPOW);
+        return Crypto.hash(String.valueOf(id) + nonce + transactionsHashCache + previousPOW);
+    }
 
-        return hashCache;
+    public void setTransactions(Set<Transaction> transactions) {
+        transactionsHashCache = "";
+        this.transactions = transactions;
     }
 
     @SneakyThrows
@@ -82,7 +83,7 @@ public class Block {
         return mapper.writeValueAsString(this);
     }
 
-    public String toString(){
+    public String toString() {
 
         return "\n----------------\nBlock " + id + "\n" +
                 "Transactions: " + transactions.size() + "\n" +
@@ -98,24 +99,15 @@ public class Block {
         return mapper.readValue(data, Block.class);
     }
 
-    public static boolean validate(Block block, String prevPOW) {
+    public boolean validate(int difficulty) {
 
-        String hash = block.hash();
-        if (!hash.equals(block.getPow())) return false;
-        log.debug("pow matches");
-
-        return (block.getId() == 1 || block.getPreviousPOW().equals(prevPOW)) && verifyPOW(block, hash);
+        return hash().equals(pow) && verifyPOW(difficulty);
     }
 
-    public static boolean verifyPOW(Block block, String pow){
+    public boolean verifyPOW(int difficulty) {
 
-        if(block.getDifficulty() == 0) return true;
-        else {
-
-            StringBuilder sb = new StringBuilder();
-            for(int i = 0; i < block.getDifficulty(); i++) sb.append("0");
-
-            return pow.substring(0, block.getDifficulty()).equals(sb.toString());
-        }
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < difficulty; i++) sb.append("0");
+        return difficulty == 0 || pow.substring(0, difficulty).equals(sb.toString());
     }
 }

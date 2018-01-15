@@ -24,6 +24,7 @@ public class AccountController {
     public Response<KeysDto> newAccount() {
 
         Account account = service.createAccount();
+
         Response<KeysDto> rsp = new Response<>();
         rsp.setStatus("success");
         rsp.setContent(account.getKeys());
@@ -31,9 +32,13 @@ public class AccountController {
     }
 
     @GetMapping("/login")
-    public Response login(String publicKey, String privateKey) {
+    public Response<Account> login(String publicKey, String privateKey) {
 
-        boolean result = service.login(publicKey, privateKey);
-        return result ? Response.success() : Response.failure();
+        Account account = service.login(publicKey, privateKey);
+
+        Response<Account> rsp = new Response<>();
+        rsp.setStatus("success");
+        rsp.setContent(account);
+        return rsp;
     }
 }

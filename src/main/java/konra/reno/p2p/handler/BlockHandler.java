@@ -3,7 +3,9 @@ package konra.reno.p2p.handler;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import konra.reno.core.Block;
 import konra.reno.core.CoreService;
+import konra.reno.core.callback.CallbackType;
 import konra.reno.p2p.HostInfo;
+import konra.reno.p2p.P2PConfig;
 import konra.reno.p2p.P2PService;
 import konra.reno.p2p.message.InitMessage;
 import konra.reno.p2p.message.MessageType;
@@ -25,26 +27,39 @@ import java.util.*;
 @Slf4j
 public class BlockHandler implements MessageHandler {
 
-    @Getter Set<MessageType> types;
     CoreService core;
+    P2PConfig config;
 
     @Autowired
-    public BlockHandler(CoreService core) {
+    public BlockHandler(CoreService core, P2PConfig config) {
         this.core = core;
-        types = new HashSet<>(Arrays.asList(MessageType.BLOCK_REQUEST, MessageType.HEAD_INFO));
+        this.config = config;
+        core.getCallbackHandler().register(CallbackType.HEAD_EXCHANGE, this::exchangeHeadBlockInfo);
     }
 
     @Override
-    public void handleIncomingMessage(InitMessage message, SocketChannel sc) {
+    public boolean handleIncomingMessage(InitMessage message, SocketChannel sc) {
 
-        if(message.getType() == MessageType.HEAD_INFO) handleBlockInfo(message, sc);
-        else if(message.getType() == MessageType.BLOCK_REQUEST) handleBlockRequest(message, sc);
+        boolean handled = false;
+
+        switch (message.getType()) {
+
+            case HEAD_INFO:
+                handleBlockInfo(message, sc);
+                handled = true;
+                break;
+            case BLOCK_REQUEST:
+                handleBlockRequest(message, sc);
+                handled = true;
+                break;
+        }
+        return handled;
     }
 
     @SneakyThrows
     private void handleBlockInfo(InitMessage message, SocketChannel sc) {
 
-       String response = InitMessage.create(MessageType.HEAD_INFO, core.getHeadBlockId()).data();
+       String response = InitMessage.create(MessageType.HEAD_INFO, core.getHeadBlock().getId()).data();
        ByteBuffer bb = ByteBuffer.allocate(response.getBytes().length);
        bb.put(response.getBytes());
        bb.flip();
@@ -55,7 +70,7 @@ public class BlockHandler implements MessageHandler {
     @SneakyThrows
     public void exchangeHeadBlockInfo() {
 
-        String message = InitMessage.create(MessageType.HEAD_INFO, core.getHeadBlockId()).data();
+        String message = InitMessage.create(MessageType.HEAD_INFO, core.getHeadBlock().getId()).data();
 
         for (HostInfo host : P2PService.hosts().values()) {
 
@@ -85,13 +100,18 @@ public class BlockHandler implements MessageHandler {
 
     private void handleBlockRequest(InitMessage message, SocketChannel sc) {
 
+        long requestBlockId = (Long) message.getPayload();
+        long headDifference = core.getHeadBlock().getId() - requestBlockId;
+        int blocksToSend = (int) (headDifference < config.getMaxBlocksPerTransfer() ? headDifference : config.getMaxBlocksPerTransfer());
 
+        List<Block> blocks = core.getBlocks(requestBlockId, blocksToSend);
+        writeBlocksToSocket(blocks, sc);
     }
 
     @SneakyThrows
     public List<Block> requestBlocks(HostInfo host) {
 
-        String message = InitMessage.create(MessageType.BLOCK_REQUEST, core.getHeadBlockId()).data();
+        String message = InitMessage.create(MessageType.BLOCK_REQUEST, core.getHeadBlock().getId()).data();
 
         SocketChannel sc = SocketChannel.open(new InetSocketAddress(host.getAddress(), host.getPort()));
         log.debug("Socket opened");

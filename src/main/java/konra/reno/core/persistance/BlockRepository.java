@@ -9,7 +9,7 @@ public interface BlockRepository extends MongoRepository<Block, Long> {
 
     Block findBlockById(long id);
     List<Block> findBlocksByIdBetween(long fromId, long toId);
-    List<Block> findBlocksByIdIsGreaterThan(long fromId);
+    List<Block> findBlocksByIdIsGreaterThanEqual(long fromId);
     void removeBlocksByIdIsGreaterThan(long fromId);
     Block findTopByOrderByIdDesc();
 }

@@ -1,24 +1,34 @@
 package konra.reno.transaction;
 
 import konra.reno.core.CoreService;
-import konra.reno.transaction.cache.TransactionCache;
+import konra.reno.transaction.cache.TransactionCacheService;
+import lombok.AccessLevel;
+import lombok.experimental.FieldDefaults;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+
+import static java.util.stream.Collectors.*;
+import static konra.reno.transaction.TransactionStatus.*;
 
 @Service
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class TransactionService {
 
     CoreService core;
-    TransactionCache cache;
+    TransactionCacheService cache;
+    TransactionRepository repository;
 
     @Autowired
-    public TransactionService(CoreService core, TransactionCache cache) {
+    public TransactionService(CoreService core, TransactionCacheService cache, TransactionRepository repository) {
         this.core = core;
         this.cache = cache;
+        this.repository = repository;
     }
 
     public Transaction newTx(Transaction transaction, String key) {
@@ -28,31 +38,32 @@ public class TransactionService {
         return transaction;
     }
 
+    // TODO implement CONFIRMED status
+    public TransactionStatus checkTxStatus(String hash) {
+
+        TransactionStatus status = UNKNOWN;
+        if(core.getTransactionPool().checkIfPending(hash)) status = PENDING;
+        if(getTxByHash(hash) != null) status = PROCESSED;
+        return status;
+    }
+
     public List<Transaction> getTxsByAddress(String address) {
 
-        TransactionCache
+        return cache.updateAndGet(address);
     }
 
     public Transaction getTxByHash(String hash) {
 
+        return repository.getTxByHash(hash);
     }
 
-    public static Map<String, Double> getSummedTxMap(List<Transaction> transactions) {
+    public static Map<String, Double> getSummedSendersTxMap(Set<Transaction> transactions) {
 
-        Map<String, Double> summedMap = new HashMap<>();
-
-        transactions.forEach(transaction -> {
-
-            String sender = transaction.getSender();
-
-            if(summedMap.containsKey(sender)) summedMap.put(sender, summedMap.get(sender) + transaction.getAmount());
-            else summedMap.put(sender, 0d);
-        });
-
-        return summedMap;
+        return transactions.stream()
+                .collect(groupingBy(Transaction::getSender, summingDouble(Transaction::getAmount)));
     }
 
-    public static double collectFees(List<Transaction> transactions) {
+    public static double getSummedFees(Set<Transaction> transactions) {
 
         return transactions.stream()
                 .map(Transaction::getFee)

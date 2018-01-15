@@ -5,6 +5,7 @@ import lombok.AccessLevel;
 import lombok.Data;
 import lombok.SneakyThrows;
 import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -17,8 +18,12 @@ import java.security.*;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
 
+/**
+ * Basic cryptography implementation. AES, RSA, SHA256, SHA256withRSA
+ */
 @Service
 @FieldDefaults(level = AccessLevel.PRIVATE)
+@Slf4j
 public class SimpleCryptoEngine implements CryptoEngine {
 
     private static String initVector = "24cd5de2a352a857";
@@ -68,7 +73,7 @@ public class SimpleCryptoEngine implements CryptoEngine {
 
         KeysDto keys = new KeysDto();
         keys.setPrivateKey(DatatypeConverter.printHexBinary(pair.getPrivate().getEncoded()));
-        keys.setPrivateKey(DatatypeConverter.printHexBinary(pair.getPublic().getEncoded()));
+        keys.setPublicKey(DatatypeConverter.printHexBinary(pair.getPublic().getEncoded()));
         return keys;
     }
 
@@ -94,7 +99,7 @@ public class SimpleCryptoEngine implements CryptoEngine {
 
         Cipher cipher = Cipher.getInstance("RSA");
         cipher.init(Cipher.DECRYPT_MODE, getPrivateKey(privateKey));
-        return new String(cipher.doFinal(DatatypeConverter.parseBase64Binary(encrypted)));
+        return new String(cipher.doFinal(DatatypeConverter.parseHexBinary(encrypted)));
     }
 
     @Override
@@ -128,7 +133,7 @@ public class SimpleCryptoEngine implements CryptoEngine {
     private PublicKey getPublicKey(String hexKey) {
 
         KeyFactory kf = KeyFactory.getInstance("RSA");
-        byte[] encoded = DatatypeConverter.parseBase64Binary(hexKey);
+        byte[] encoded = DatatypeConverter.parseHexBinary(hexKey);
         X509EncodedKeySpec keySpecPb = new X509EncodedKeySpec(encoded);
         return kf.generatePublic(keySpecPb);
     }
@@ -137,7 +142,7 @@ public class SimpleCryptoEngine implements CryptoEngine {
     private PrivateKey getPrivateKey(String hexKey) {
 
         KeyFactory kf = KeyFactory.getInstance("RSA");
-        byte[] encoded = DatatypeConverter.parseBase64Binary(hexKey);
+        byte[] encoded = DatatypeConverter.parseHexBinary(hexKey);
         PKCS8EncodedKeySpec keySpecPv = new PKCS8EncodedKeySpec(encoded);
         return kf.generatePrivate(keySpecPv);
     }

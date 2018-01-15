@@ -2,8 +2,6 @@ package konra.reno.p2p;
 
 import konra.reno.core.Block;
 import konra.reno.core.CoreService;
-import konra.reno.core.callback.CallbackHandler;
-import konra.reno.core.callback.CallbackType;
 import konra.reno.p2p.handler.BlockHandler;
 import konra.reno.p2p.handler.MessageHandler;
 import konra.reno.p2p.handler.PeerHandler;
@@ -17,7 +15,6 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
-import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.ServerSocketChannel;
@@ -39,7 +36,6 @@ public class P2PService {
 
     CoreService core;
     P2PConfig config;
-    CallbackHandler callbackHandler;
 
     @Resource
     List<MessageHandler> handlers;
@@ -51,18 +47,16 @@ public class P2PService {
     boolean bulkDownload;
 
     @Autowired
-    public P2PService(CoreService core, P2PConfig config, CallbackHandler callbackHandler) {
+    public P2PService(CoreService core, P2PConfig config) {
         this.core = core;
         this.config = config;
-        this.callbackHandler = callbackHandler;
+        exec = Executors.newScheduledThreadPool(10);
     }
 
     @PostConstruct
     @SneakyThrows
     public void init() {
 
-        callbackHandler.register(CallbackType.HEAD_EXCHANGE, this::refreshHeadInfo);
-        exec = Executors.newScheduledThreadPool(10);
         doConnect = false;
         doSync = false;
         bulkDownload = false;
@@ -117,35 +111,27 @@ public class P2PService {
         BlockHandler blockHandler = (BlockHandler) getHandler(BlockHandler.class);
         PeerHandler peerHandler = (PeerHandler) getHandler(PeerHandler.class);
 
-        HostInfo host = peerHandler.resolvePeerWithBlock(core.getHeadBlockId() + 1);
+        HostInfo host = peerHandler.resolvePeerWithBlock(core.getHeadBlock().getId() + 1);
         List<Block> blocks = blockHandler.requestBlocks(host);
-        core.processIncomingBlocks(blocks);
+        core.processNewBlocks(blocks);
 
         if(doSync) exec.execute(this::sync);
     }
 
     public boolean checkSync() {
 
-        if(!bulkDownload) refreshHeadInfo();
+        if(!bulkDownload) ((BlockHandler) getHandler(BlockHandler.class)).exchangeHeadBlockInfo();
 
         HostInfo headHost = hosts.values().stream()
                 .filter(host -> host.getHeadId() != -1)
                 .max((host1, host2) -> (int) (host1.getHeadId() - host2.getHeadId())).get();
 
         core.setNetworkHead(headHost.getHeadId());
-        return headHost.getHeadId() <= core.getHeadBlockId();
-    }
-
-    public void refreshHeadInfo() {
-
-        BlockHandler handler = (BlockHandler) getHandler(BlockHandler.class);
-        handler.exchangeHeadBlockInfo();
+        return headHost.getHeadId() <= core.getHeadBlock().getId();
     }
 
     private void getHosts() {
-
-        PeerHandler handler = (PeerHandler) getHandler(PeerHandler.class);
-        handler.getHosts(hosts, config);
+        ((PeerHandler) getHandler(PeerHandler.class)).getHosts();
     }
 
     @SneakyThrows
@@ -163,6 +149,7 @@ public class P2PService {
         Runnable processMessage = () -> {
 
             ByteBuffer bf = ByteBuffer.allocate(2048);
+
             try {
                 sc.read(bf);
             } catch (Exception e) { throw new RuntimeException("Processing message exception"); }
@@ -171,9 +158,7 @@ public class P2PService {
             InitMessage message = InitMessage.parse(new String(bf.array()));
             log.debug("Incoming message " + message.toString());
 
-            handlers.stream()
-                    .filter(handler -> handler.canHandle(message.getType()))
-                    .forEach(handler -> handler.handleIncomingMessage(message, sc));
+            handlers.forEach(handler -> handler.handleIncomingMessage(message, sc));
         };
 
         exec.execute(processMessage);

@@ -29,6 +29,10 @@ public class TransactionPool {
         pending.put(t.getHash(), t);
     }
 
+    public boolean checkIfPending(String hash) {
+        return pending.containsKey(hash);
+    }
+
     public boolean checkIfPending(Transaction t) {
         return pending.containsKey(t.getHash());
     }

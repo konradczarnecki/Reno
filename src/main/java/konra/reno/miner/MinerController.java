@@ -18,15 +18,13 @@ public class MinerController {
     @GetMapping("/mine")
     public Response mine(){
 
-        service.ready();
-        service.startMining();
         return Response.success();
     }
 
     @GetMapping("/stop-mining")
     public Response stopMine(){
 
-        service.stopMining();
+
         return Response.success();
     }
 }

@@ -2,78 +2,74 @@ package konra.reno.miner;
 
 import konra.reno.core.Block;
 import konra.reno.core.CoreService;
+import konra.reno.core.callback.CallbackHandler;
+import konra.reno.core.callback.CallbackType;
+import konra.reno.core.reward.BlockConfiguration;
+import konra.reno.miner.txpicker.TxPicker;
 import konra.reno.util.FileService;
 import konra.reno.transaction.Transaction;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 
 @Service
+@Slf4j
 public class MinerService {
 
-    private static final Logger log = LoggerFactory.getLogger(MinerService.class);
-
-    private CoreService core;
-    private FileService fileService;
-
-    List<Transaction> transactions;
-
+    CoreService core;
+    TxPicker picker;
+    BlockConfiguration blockConfiguration;
     ScheduledExecutorService exec;
-    boolean stopMining;
+
+    boolean doMine;
+    Block minedBlock;
 
     @Autowired
-    public MinerService(CoreService core, FileService fileService) {
+    public MinerService(CoreService core, CallbackHandler callbackHandler, BlockConfiguration blockConfiguration) {
 
         this.core = core;
-        this.fileService = fileService;
+        this.blockConfiguration = blockConfiguration;
         this.exec = Executors.newScheduledThreadPool(10);
-        this.stopMining = false;
+        callbackHandler.register(CallbackType.MINE_NEW_BLOCK, this::restartMining);
     }
 
-    public synchronized void startMining(){
+    public void startMining(String minerAddress) {
 
-        if(stopMining) return;
+        Block head = core.getHeadBlock();
+        minedBlock = new Block(head);
+        Set<Transaction> txs = picker.pick(new HashSet<>(core.getTransactionPool().getPool().values()));
+        minedBlock.setTransactions(txs);
 
-        exec = exec == null ? Executors.newScheduledThreadPool(10) : exec;
-
+        doMine = true;
+        exec.execute(this::mine);
     }
 
-    public void stopMining(){
+    private void mine() {
 
-        exec.shutdownNow();
-        exec = null;
-        this.stopMining = true;
-    }
+        while(doMine) {
 
-    public Block mineBlock(Block raw){
-
-        log.info("Mining block {}...", raw.getId());
-
-        for(long n = 0; n < Long.MAX_VALUE-1; n++){
-
-            raw.bumpNonce();
-            String hash = raw.hash();
-
-            if(Block.verifyPOW(raw, hash)) {
-
-                raw.setPow(hash);
-                return raw;
-            }
+            minedBlock.bumpNonce();
+            minedBlock.setPow(minedBlock.hash());
+            if(minedBlock.verifyPOW(blockConfiguration.getDifficulty(minedBlock)))
+                core.processNewBlocks(Collections.singletonList(minedBlock));
         }
-
-        return null;
     }
 
-    public void ready(){
+    public void stopMining() {
 
-        this.stopMining = false;
+        doMine = false;
     }
 
+    public void restartMining() {
 
-
+        if(!doMine) return;
+        stopMining();
+        startMining(minedBlock.getMiner());
+    }
 }

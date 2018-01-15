@@ -23,7 +23,6 @@ import java.util.*;
 @Slf4j
 public class PeerHandler implements MessageHandler {
 
-    @Getter Set<MessageType> types;
     CoreService core;
     P2PConfig config;
 
@@ -31,13 +30,21 @@ public class PeerHandler implements MessageHandler {
     public PeerHandler(CoreService core, P2PConfig config) {
         this.core = core;
         this.config = config;
-        types = new HashSet<>(Collections.singletonList(MessageType.HEAD_INFO));
     }
 
     @Override
-    public void handleIncomingMessage(InitMessage message, SocketChannel sc) {
+    public boolean handleIncomingMessage(InitMessage message, SocketChannel sc) {
 
-        if(message.getType() == MessageType.HEAD_INFO) handleBlockInfo(message, sc);
+        boolean handled = false;
+
+        switch (message.getType()) {
+
+            case HEAD_INFO:
+                handleBlockInfo(message, sc);
+                handled = false;
+                break;
+        }
+        return handled;
     }
 
     private void handleBlockInfo(InitMessage message, SocketChannel sc) {
@@ -47,7 +54,7 @@ public class PeerHandler implements MessageHandler {
         P2PService.hosts().put(host.getAddress(), host);
     }
 
-    public void getHosts(Map<String, HostInfo> hosts, P2PConfig config) {
+    public void getHosts() {
 
         String[] trackers = config.getTrackers().split(",");
 
@@ -65,9 +72,9 @@ public class PeerHandler implements MessageHandler {
 
                 Arrays.stream(addresses)
                         .map(address -> HostInfo.createHostInfo(address, config))
-                        .forEach(hostInfo -> hosts.put(hostInfo.getAddress(), hostInfo));
+                        .forEach(hostInfo -> P2PService.hosts().put(hostInfo.getAddress(), hostInfo));
 
-                if(hosts.size() >= config.getInitHosts()) break;
+                if(P2PService.hosts().size() >= config.getInitHosts()) break;
 
             } catch (Exception ignored) {}
         }

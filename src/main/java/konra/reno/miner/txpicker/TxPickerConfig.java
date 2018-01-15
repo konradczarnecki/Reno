@@ -1,13 +1,15 @@
-package konra.reno.core;
+package konra.reno.miner.txpicker;
 
 import lombok.AccessLevel;
 import lombok.Getter;
-import lombok.Setter;
 import lombok.experimental.FieldDefaults;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
-@ConfigurationProperties("core")
-@Getter @Setter
+@ConfigurationProperties("txpicker")
+@Getter
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class CoreConfig {
+public class TxPickerConfig {
+
+    int maxTxPerBlock;
+    PickerStrategy strategy;
 }

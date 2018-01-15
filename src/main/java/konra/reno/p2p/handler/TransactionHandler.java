@@ -3,6 +3,7 @@ package konra.reno.p2p.handler;
 import konra.reno.core.CoreService;
 import konra.reno.core.callback.CallbackHandler;
 import konra.reno.core.callback.CallbackType;
+import konra.reno.p2p.HostInfo;
 import konra.reno.p2p.P2PService;
 import konra.reno.p2p.message.InitMessage;
 import konra.reno.p2p.message.MessageType;
@@ -29,19 +30,31 @@ import java.util.Set;
 @Slf4j
 public class TransactionHandler implements MessageHandler {
 
-    @Getter Set<MessageType> types;
     CoreService core;
 
     @Autowired
-    public TransactionHandler(CoreService core, CallbackHandler callbackHandler) {
+    public TransactionHandler(CoreService core) {
 
         this.core = core;
-        types = new HashSet<>(Collections.singletonList(MessageType.TRANSACTION));
-        callbackHandler.register(CallbackType.TRANSACTION, this::announceTransaction);
+        core.getCallbackHandler().register(CallbackType.TRANSACTION, this::announceTransaction);
     }
 
     @Override
-    public void handleIncomingMessage(InitMessage message, SocketChannel sc) {
+    public boolean handleIncomingMessage(InitMessage message, SocketChannel sc) {
+
+        boolean handled = false;
+
+        switch (message.getType()) {
+
+            case TRANSACTION:
+                handleIncomingTransaction(message);
+                handled = true;
+                break;
+        }
+        return handled;
+    }
+
+    private void handleIncomingTransaction(InitMessage message) {
 
         Transaction transaction = Transaction.parse(message.data());
         core.getTransactionPool().addToPool(transaction);
@@ -56,16 +69,14 @@ public class TransactionHandler implements MessageHandler {
         bb.put(message.getBytes());
         bb.flip();
 
-        P2PService.hosts().values().forEach(host -> {
+        for(HostInfo host: P2PService.hosts().values()){
 
             try {
-
                 SocketChannel sc = SocketChannel.open(new InetSocketAddress(host.getAddress(), host.getPort()));
                 while(bb.hasRemaining()) sc.write(bb);
                 bb.flip();
 
             } catch (Exception ignored) { }
-
-        });
+        }
     }
 }

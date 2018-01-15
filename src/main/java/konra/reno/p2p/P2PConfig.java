@@ -15,5 +15,5 @@ public class P2PConfig {
     int defaultMessagePort;
     int initHosts;
     int maxHosts;
-    int maxBlocksToTransfer;
+    int maxBlocksPerTransfer;
 }
