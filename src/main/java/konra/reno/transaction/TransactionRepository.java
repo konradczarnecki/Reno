@@ -1,6 +1,6 @@
 package konra.reno.transaction;
 
-import konra.reno.core.Block;
+import konra.reno.core.block.Block;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -15,7 +15,6 @@ import org.springframework.stereotype.Repository;
 import java.util.Collection;
 import java.util.List;
 import java.util.function.Predicate;
-import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
 @Repository

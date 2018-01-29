@@ -1,6 +1,5 @@
 package konra.reno.transaction.cache;
 
-import konra.reno.core.Block;
 import konra.reno.core.CoreService;
 import konra.reno.transaction.Transaction;
 import konra.reno.transaction.TransactionRepository;

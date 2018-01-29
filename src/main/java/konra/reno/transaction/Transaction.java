@@ -21,8 +21,8 @@ public class Transaction {
     long timestamp;
     String sender;
     String receiver;
-    double amount;
-    double fee;
+    long amount;
+    long fee;
     String message;
     String hash;
     String signature;
@@ -30,8 +30,8 @@ public class Transaction {
     @JsonCreator
     public Transaction(@JsonProperty("sender") String sender,
                        @JsonProperty("receiver") String receiver,
-                       @JsonProperty("amount") double amount,
-                       @JsonProperty("fee") double fee,
+                       @JsonProperty("amount") long amount,
+                       @JsonProperty("fee") long fee,
                        @JsonProperty("message") String message) {
 
         this.sender = sender;

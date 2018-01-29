@@ -56,17 +56,4 @@ public class TransactionService {
 
         return repository.getTxByHash(hash);
     }
-
-    public static Map<String, Double> getSummedSendersTxMap(Set<Transaction> transactions) {
-
-        return transactions.stream()
-                .collect(groupingBy(Transaction::getSender, summingDouble(Transaction::getAmount)));
-    }
-
-    public static double getSummedFees(Set<Transaction> transactions) {
-
-        return transactions.stream()
-                .map(Transaction::getFee)
-                .reduce(0d, (partial, fee) -> partial + fee);
-    }
 }

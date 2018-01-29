@@ -20,7 +20,7 @@ public class Account {
 
     @Id
     String address;
-    double balance;
+    long balance;
 
     @Transient
     KeysDto keys;
@@ -31,11 +31,11 @@ public class Account {
         this.balance = 0;
     }
 
-    public void add(double amount) {
+    public void add(long amount) {
         this.balance += amount;
     }
 
-    public void subtract(double amount) {
+    public void subtract(long amount) {
         this.balance -= amount;
     }
 

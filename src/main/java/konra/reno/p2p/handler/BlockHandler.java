@@ -1,7 +1,7 @@
 package konra.reno.p2p.handler;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import konra.reno.core.Block;
+import konra.reno.core.block.Block;
 import konra.reno.core.CoreService;
 import konra.reno.core.callback.CallbackType;
 import konra.reno.p2p.HostInfo;
@@ -10,7 +10,6 @@ import konra.reno.p2p.P2PService;
 import konra.reno.p2p.message.InitMessage;
 import konra.reno.p2p.message.MessageType;
 import lombok.AccessLevel;
-import lombok.Getter;
 import lombok.SneakyThrows;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;

@@ -1,12 +1,13 @@
 package konra.reno.core;
 
 import konra.reno.account.Account;
+import konra.reno.core.block.Block;
 import konra.reno.core.callback.CallbackHandler;
 import konra.reno.core.callback.CallbackType;
 import konra.reno.core.persistance.BlockRepository;
 import konra.reno.core.persistance.RenoRepository;
 import konra.reno.core.persistance.StateRepository;
-import konra.reno.core.reward.BlockConfiguration;
+import konra.reno.core.block.BlockConfiguration;
 import konra.reno.transaction.Transaction;
 import konra.reno.transaction.TransactionPool;
 import konra.reno.transaction.TransactionService;
@@ -24,6 +25,9 @@ import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 
+import static java.util.stream.Collectors.groupingBy;
+import static java.util.stream.Collectors.summingDouble;
+
 @Service
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Slf4j
@@ -39,7 +43,8 @@ public class CoreService {
     ScheduledExecutorService exec;
 
     @Getter TransactionPool transactionPool;
-    @Getter Block headBlock;
+    @Getter
+    Block headBlock;
     @Getter @Setter long networkHead;
 
     @Autowired
@@ -80,6 +85,7 @@ public class CoreService {
 
     public List<Block> getBlocks(long fromId, long count) {
 
+        // maybe fromId - 1? check how spring data handles between
         return blockRepository.findBlocksByIdBetween(fromId, fromId + count);
     }
 
@@ -96,6 +102,7 @@ public class CoreService {
     private void processBlock(Block block) {
 
         if(verifyBlock(block)) acceptBlock(block);
+//        else throw new InvalidBlockException();
     }
 
     private boolean verifyBlock(Block block) {
@@ -113,7 +120,7 @@ public class CoreService {
         Set<Transaction> transactions = block.getTransactions();
         if(!transactions.stream().allMatch(Transaction::validate)) return false;
 
-        Map<String, Double> summedMap = TransactionService.getSummedSendersTxMap(transactions);
+        Map<String, Double> summedMap = getSummedSendersTxMap(transactions);
 
         for(Map.Entry<String, Double> entry: summedMap.entrySet()) {
 
@@ -133,14 +140,11 @@ public class CoreService {
         if(miner == null) miner = new Account(block.getMiner());
 
         miner.add(blockConfiguration.getReward(block));
-        miner.add(TransactionService.getSummedFees(block.getTransactions()));
+        miner.add(getSummedFees(block.getTransactions()));
         stateRepository.save(miner);
 
         block.getTransactions().forEach(this::applyTransaction);
         setHeadBlock(block);
-
-        if(!renoRepository.getCollectionHash("state").equals(block.getStateHash()))
-            throw new RuntimeException("Verified block state hash mismatch.");
     }
 
     private void applyTransaction(Transaction transaction) {
@@ -168,5 +172,18 @@ public class CoreService {
 
         transactionPool.addPending(transaction);
         callbackHandler.execute(CallbackType.TRANSACTION, transaction);
+    }
+
+    public static Map<String, Double> getSummedSendersTxMap(Set<Transaction> transactions) {
+
+        return transactions.stream()
+                .collect(groupingBy(Transaction::getSender, summingDouble(Transaction::getAmount)));
+    }
+
+    public static long getSummedFees(Set<Transaction> transactions) {
+
+        return transactions.stream()
+                .map(Transaction::getFee)
+                .reduce(0L, (partial, fee) -> partial + fee);
     }
 }

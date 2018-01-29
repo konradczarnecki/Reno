@@ -1,13 +1,12 @@
-package konra.reno.core.reward;
+package konra.reno.core.block;
 
-import konra.reno.core.Block;
 import org.springframework.stereotype.Service;
 
 @Service
 public class SimpleBlockConfiguration implements BlockConfiguration {
 
     @Override
-    public double getReward(Block block) {
+    public long getReward(Block block) {
 
         if(block.getId() < 1000) return 1000;
         else if(block.getId() < 1000000) return 100;

@@ -1,4 +1,4 @@
-package konra.reno.core;
+package konra.reno.core.block;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import konra.reno.crypto.Crypto;
@@ -9,17 +9,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Transient;
 import org.springframework.data.mongodb.core.mapping.Document;
-import org.springframework.data.mongodb.core.mapping.Field;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 @Document(collection = "blockchain")
 @FieldDefaults(level = AccessLevel.PRIVATE)
-@Getter
-@Setter
+@Getter @Setter
 @Slf4j
 public class Block {
 
@@ -32,7 +27,6 @@ public class Block {
     String pow;
     String miner;
     String message;
-    String stateHash;
 
     @Transient
     String transactionsHashCache;
@@ -41,6 +35,7 @@ public class Block {
 
         nonce = 0;
         transactions = new HashSet<>();
+        timestamp = System.currentTimeMillis();
         pow = "";
         transactionsHashCache = "";
 
@@ -49,7 +44,7 @@ public class Block {
             previousPOW = previousBlock.pow;
         } else {
             id = 1;
-            previousPOW = "";
+            previousPOW = "reno" + timestamp;
         }
     }
 

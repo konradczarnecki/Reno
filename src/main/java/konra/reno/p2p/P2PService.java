@@ -1,6 +1,6 @@
 package konra.reno.p2p;
 
-import konra.reno.core.Block;
+import konra.reno.core.block.Block;
 import konra.reno.core.CoreService;
 import konra.reno.p2p.handler.BlockHandler;
 import konra.reno.p2p.handler.MessageHandler;

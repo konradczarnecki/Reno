@@ -1,7 +1,7 @@
 package konra.reno;
 
 import konra.reno.account.Account;
-import konra.reno.core.Block;
+import konra.reno.core.block.Block;
 import konra.reno.core.persistance.StateRepository;
 import org.junit.Test;
 import static org.junit.Assert.*;
@@ -11,10 +11,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.test.context.junit4.SpringRunner;
-
-import javax.xml.bind.DatatypeConverter;
-import java.security.KeyPair;
-import java.util.List;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest
@@ -38,6 +34,5 @@ public class StateRepositoryTest {
         Block b2 = new Block(b);
 
         template.save(b, "chunk_846");
-
     }
 }
