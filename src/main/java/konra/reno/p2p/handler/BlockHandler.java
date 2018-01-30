@@ -79,17 +79,17 @@ public class BlockHandler implements MessageHandler {
                 SocketChannel sc = SocketChannel.open(new InetSocketAddress(host.getAddress(), host.getPort()));
                 log.debug("Socket opened");
 
-                ByteBuffer bf = ByteBuffer.allocate(1024);
-                bf.put(message.getBytes());
-                bf.flip();
-                while (bf.hasRemaining()) sc.write(bf);
+                ByteBuffer bb = ByteBuffer.allocate(1024);
+                bb.put(message.getBytes());
+                bb.flip();
+                while (bb.hasRemaining()) sc.write(bb);
                 log.debug("Head init message sent.");
 
-                bf.clear();
-                sc.read(bf);
-                bf.flip();
+                bb.clear();
+                sc.read(bb);
+                bb.flip();
 
-                InitMessage returnMessage = InitMessage.parse(new String(bf.array()));
+                InitMessage returnMessage = InitMessage.parse(new String(bb.array()));
                 host.setHeadId((Long) returnMessage.getPayload());
                 log.debug("Peer head: " + host.getHeadId());
 
@@ -125,6 +125,7 @@ public class BlockHandler implements MessageHandler {
     }
 
     @SneakyThrows
+    @SuppressWarnings("unchecked")
     private List<Block> readBlocksFromSocket(SocketChannel sc) {
 
         ByteBuffer bf = ByteBuffer.allocate(Integer.BYTES);

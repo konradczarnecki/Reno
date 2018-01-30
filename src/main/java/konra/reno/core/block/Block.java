@@ -60,7 +60,7 @@ public class Block {
 
             StringBuilder transactionsHash = new StringBuilder();
             transactions.forEach(transaction -> transactionsHash.append(transaction.getHash()));
-            transactionsHashCache = transactionsHash.toString();
+            transactionsHashCache = Crypto.hash(transactionsHash.toString());
         }
 
         return Crypto.hash(String.valueOf(id) + nonce + transactionsHashCache + previousPOW);

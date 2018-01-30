@@ -50,6 +50,11 @@ public class Transaction {
         return true;
     }
 
+    public boolean validate() {
+
+        return Crypto.verifySignature(signature, sender, hash());
+    }
+
     @SneakyThrows
     public String data() {
 
@@ -82,10 +87,5 @@ public class Transaction {
 
         ObjectMapper mapper = new ObjectMapper();
         return mapper.readValue(data, Transaction.class);
-    }
-
-    public static boolean validate(Transaction t) {
-
-        return Crypto.verifySignature(t.signature, t.sender, t.hash());
     }
 }

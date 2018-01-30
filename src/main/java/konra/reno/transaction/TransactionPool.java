@@ -29,6 +29,10 @@ public class TransactionPool {
         pending.put(t.getHash(), t);
     }
 
+    public void removePending(Transaction t) {
+        pending.remove(t.getHash());
+    }
+
     public boolean checkIfPending(String hash) {
         return pending.containsKey(hash);
     }
@@ -39,5 +43,9 @@ public class TransactionPool {
 
     public void addToPool(Transaction t) {
         if(fillPool) pool.put(t.getHash(), t);
+    }
+
+    public boolean pendingTransactions() {
+        return !pending.isEmpty();
     }
 }

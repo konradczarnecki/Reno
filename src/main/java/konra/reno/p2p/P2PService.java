@@ -28,7 +28,7 @@ import java.util.concurrent.ScheduledExecutorService;
 @Slf4j
 public class P2PService {
 
-    private static Map<String, HostInfo> hosts;
+    volatile private static Map<String, HostInfo> hosts;
 
     static {
         hosts = new HashMap<>();

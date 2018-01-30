@@ -44,6 +44,7 @@ public class PeerHandler implements MessageHandler {
                 handled = false;
                 break;
         }
+
         return handled;
     }
 

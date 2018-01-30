@@ -34,7 +34,6 @@ public class MinerService {
 
     @Autowired
     public MinerService(CoreService core,
-                        CallbackHandler callbackHandler,
                         TxPicker picker,
                         BlockConfiguration blockConfiguration) {
 
@@ -42,7 +41,7 @@ public class MinerService {
         this.picker = picker;
         this.blockConfiguration = blockConfiguration;
         this.exec = Executors.newScheduledThreadPool(10);
-        callbackHandler.register(CallbackType.MINE_NEW_BLOCK, this::restartMining);
+        core.getCallbackHandler().register(CallbackType.MINE_NEW_BLOCK, this::restartMining);
     }
 
     public void startMining(String minerAddress) {
@@ -64,6 +63,7 @@ public class MinerService {
 
             minedBlock.bumpNonce();
             minedBlock.setPow(minedBlock.hash());
+
             if(minedBlock.verifyPOW(blockConfiguration.getDifficulty(minedBlock)))
                 core.processNewBlocks(Collections.singletonList(minedBlock));
         }

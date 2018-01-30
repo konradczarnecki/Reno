@@ -81,6 +81,7 @@ public class CoreService {
 
         headBlock = head;
         callbackHandler.execute(CallbackType.HEAD_EXCHANGE);
+        callbackHandler.execute(CallbackType.MINE_NEW_BLOCK);
     }
 
     public List<Block> getBlocks(long fromId, long count) {
@@ -149,6 +150,9 @@ public class CoreService {
 
     private void applyTransaction(Transaction transaction) {
 
+        if(transactionPool.pendingTransactions() && transactionPool.checkIfPending(transaction))
+            transactionPool.removePending(transaction);
+
         Account sender = stateRepository.findAccountByAddress(transaction.getSender());
         Account receiver = stateRepository.findAccountByAddress(transaction.getReceiver());
 
@@ -160,12 +164,32 @@ public class CoreService {
         stateRepository.save(receiver);
     }
 
-    public boolean rollbackLastBlock() {
-        return rollbackFromBlock(headBlock.getId());
+    @Transactional
+    protected void rollbackTransaction(Transaction transaction) {
+
+        Account sender = stateRepository.findAccountByAddress(transaction.getSender());
+        Account receiver = stateRepository.findAccountByAddress(transaction.getReceiver());
+
+        sender.add(transaction.getAmount());
+        receiver.subtract(transaction.getAmount());
     }
 
-    public boolean rollbackFromBlock(long blockId) {
-        return true;
+    public void rollbackFromBlock(long blockId) {
+
+        while(headBlock.getId() >= blockId) rollbackLastBlock();
+    }
+
+    public void rollbackLastBlock() {
+
+        blockRepository.removeBlocksByIdIsGreaterThan(headBlock.getId() - 1);
+
+        Account miner = stateRepository.findAccountByAddress(headBlock.getMiner());
+        miner.subtract(blockConfiguration.getReward(headBlock));
+        miner.subtract(getSummedFees(headBlock.getTransactions()));
+        stateRepository.save(miner);
+
+        headBlock.getTransactions().forEach(this::rollbackTransaction);
+        headBlock = blockRepository.findBlockById(headBlock.getId() - 1);
     }
 
     public void addNewTransaction(Transaction transaction) {
