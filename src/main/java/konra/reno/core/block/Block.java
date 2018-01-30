@@ -14,7 +14,10 @@ import java.util.*;
 
 @Document(collection = "blockchain")
 @FieldDefaults(level = AccessLevel.PRIVATE)
+@AllArgsConstructor
+@NoArgsConstructor
 @Getter @Setter
+@ToString
 @Slf4j
 public class Block {
 
@@ -78,14 +81,14 @@ public class Block {
         return mapper.writeValueAsString(this);
     }
 
-    public String toString() {
-
-        return "\n----------------\nBlock " + id + "\n" +
-                "Transactions: " + transactions.size() + "\n" +
-                "POW:          " + pow + "\n" +
-                "Previous POW: " + previousPOW + "\n" +
-                "---------------\n";
-    }
+//    public String toString() {
+//
+//        return "\n----------------\nBlock " + id + "\n" +
+//                "Transactions: " + transactions.size() + "\n" +
+//                "POW:          " + pow + "\n" +
+//                "Previous POW: " + previousPOW + "\n" +
+//                "---------------\n";
+//    }
 
     @SneakyThrows
     public static Block parse(String data) {

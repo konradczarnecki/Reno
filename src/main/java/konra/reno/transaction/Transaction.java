@@ -5,16 +5,14 @@ import com.fasterxml.jackson.annotation.JsonGetter;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import konra.reno.crypto.Crypto;
-import lombok.AccessLevel;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.SneakyThrows;
+import lombok.*;
 import lombok.experimental.FieldDefaults;
 import org.apache.commons.codec.digest.Crypt;
 
 import java.util.Date;
 
 @FieldDefaults(level = AccessLevel.PRIVATE)
+@ToString
 @Getter
 public class Transaction {
 

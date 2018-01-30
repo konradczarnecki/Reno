@@ -5,10 +5,7 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.FieldDefaults;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Getter
@@ -33,6 +30,10 @@ public class TransactionPool {
         pending.remove(t.getHash());
     }
 
+    public boolean pendingTransactions() {
+        return !pending.isEmpty();
+    }
+
     public boolean checkIfPending(String hash) {
         return pending.containsKey(hash);
     }
@@ -45,7 +46,7 @@ public class TransactionPool {
         if(fillPool) pool.put(t.getHash(), t);
     }
 
-    public boolean pendingTransactions() {
-        return !pending.isEmpty();
+    public void removeFromPool(Set<Transaction> transactions) {
+        transactions.forEach(tx -> pool.put(tx.getHash(), null));
     }
 }

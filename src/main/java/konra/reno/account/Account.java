@@ -12,6 +12,7 @@ import org.springframework.data.mongodb.core.mapping.Field;
 @Document(collection = "state")
 @EqualsAndHashCode
 @AllArgsConstructor
+@NoArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @ToString
 @Getter @Setter

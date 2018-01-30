@@ -35,36 +35,27 @@ public class CoreService {
 
     BlockRepository blockRepository;
     StateRepository stateRepository;
-    RenoRepository renoRepository;
     BlockConfiguration blockConfiguration;
     CoreConfig config;
-    FileService fileService;
     @Getter CallbackHandler callbackHandler;
-    ScheduledExecutorService exec;
 
     @Getter TransactionPool transactionPool;
-    @Getter
-    Block headBlock;
+    @Getter Block headBlock;
     @Getter @Setter long networkHead;
 
     @Autowired
     public CoreService(BlockRepository blockRepository,
                        StateRepository stateRepository,
-                       RenoRepository renoRepository,
                        BlockConfiguration blockConfiguration,
                        CoreConfig config,
-                       CallbackHandler callbackHandler,
-                       FileService fileService) {
+                       CallbackHandler callbackHandler) {
 
-        this.fileService = fileService;
         this.blockRepository = blockRepository;
         this.stateRepository = stateRepository;
-        this.renoRepository = renoRepository;
         this.blockConfiguration = blockConfiguration;
         this.callbackHandler = callbackHandler;
         this.config = config;
         this.transactionPool = new TransactionPool();
-        exec  = Executors.newScheduledThreadPool(10);
     }
 
     @Transactional
@@ -86,8 +77,7 @@ public class CoreService {
 
     public List<Block> getBlocks(long fromId, long count) {
 
-        // maybe fromId - 1? check how spring data handles between
-        return blockRepository.findBlocksByIdBetween(fromId, fromId + count);
+        return blockRepository.findBlocksByIdBetween(fromId - 1, fromId + count);
     }
 
     public List<Block> getBlocks(long fromId) {
@@ -100,10 +90,21 @@ public class CoreService {
         incomingBlocks.forEach(this::processBlock);
     }
 
+    public void rollbackFromBlock(long blockId) {
+
+        while(headBlock.getId() >= blockId) rollbackLastBlock();
+    }
+
+    public void addNewTransaction(Transaction transaction) {
+
+        transactionPool.addPending(transaction);
+        callbackHandler.execute(CallbackType.TRANSACTION, transaction);
+    }
+
     private void processBlock(Block block) {
 
         if(verifyBlock(block)) acceptBlock(block);
-//        else throw new InvalidBlockException();
+        else throw new RuntimeException("Invalid block exception");
     }
 
     private boolean verifyBlock(Block block) {
@@ -145,6 +146,8 @@ public class CoreService {
         stateRepository.save(miner);
 
         block.getTransactions().forEach(this::applyTransaction);
+        transactionPool.removeFromPool(block.getTransactions());
+
         setHeadBlock(block);
     }
 
@@ -159,7 +162,9 @@ public class CoreService {
         if(receiver == null) receiver = new Account(transaction.getReceiver());
 
         sender.subtract(transaction.getAmount());
+        sender.subtract(transaction.getFee());
         receiver.add(transaction.getAmount());
+
         stateRepository.save(sender);
         stateRepository.save(receiver);
     }
@@ -171,15 +176,14 @@ public class CoreService {
         Account receiver = stateRepository.findAccountByAddress(transaction.getReceiver());
 
         sender.add(transaction.getAmount());
+        sender.add(transaction.getFee());
         receiver.subtract(transaction.getAmount());
+
+        stateRepository.save(sender);
+        stateRepository.save(receiver);
     }
 
-    public void rollbackFromBlock(long blockId) {
-
-        while(headBlock.getId() >= blockId) rollbackLastBlock();
-    }
-
-    public void rollbackLastBlock() {
+    private void rollbackLastBlock() {
 
         blockRepository.removeBlocksByIdIsGreaterThan(headBlock.getId() - 1);
 
@@ -190,12 +194,6 @@ public class CoreService {
 
         headBlock.getTransactions().forEach(this::rollbackTransaction);
         headBlock = blockRepository.findBlockById(headBlock.getId() - 1);
-    }
-
-    public void addNewTransaction(Transaction transaction) {
-
-        transactionPool.addPending(transaction);
-        callbackHandler.execute(CallbackType.TRANSACTION, transaction);
     }
 
     public static Map<String, Double> getSummedSendersTxMap(Set<Transaction> transactions) {
