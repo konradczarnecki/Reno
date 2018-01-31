@@ -11,5 +11,5 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public class TxPickerConfig {
 
     int maxTxPerBlock;
-    PickerStrategy strategy;
+    PickerStrategy strategy = PickerStrategy.HIGHIEST_FEE;
 }

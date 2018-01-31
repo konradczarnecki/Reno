@@ -12,6 +12,7 @@ import org.springframework.data.mongodb.core.mapping.Field;
 @Document(collection = "state")
 @Data
 @NoArgsConstructor
+@AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Builder
 public class Account {

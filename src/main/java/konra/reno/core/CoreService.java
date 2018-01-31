@@ -73,6 +73,8 @@ public class CoreService {
         headBlock = head;
         callbackHandler.execute(CallbackType.HEAD_EXCHANGE);
         callbackHandler.execute(CallbackType.MINE_NEW_BLOCK);
+
+        log.debug("New head: " + headBlock.toString());
     }
 
     public List<Block> getBlocks(long fromId, long count) {
@@ -102,6 +104,8 @@ public class CoreService {
     }
 
     private void processBlock(Block block) {
+
+        log.debug("Processing block " + block.toString());
 
         if(verifyBlock(block)) acceptBlock(block);
         else throw new RuntimeException("Invalid block exception");

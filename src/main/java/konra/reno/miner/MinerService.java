@@ -61,8 +61,10 @@ public class MinerService {
 
             minedBlock.bumpNonce();
 
-            if(minedBlock.prove(core.getBlockConfiguration().getDifficulty(minedBlock)))
+            if(minedBlock.prove(core.getBlockConfiguration().getDifficulty(minedBlock))){
                 core.processNewBlocks(Collections.singletonList(minedBlock));
+                break;
+            }
         }
     }
 
