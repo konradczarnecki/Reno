@@ -47,6 +47,11 @@ public class TransactionPool {
     }
 
     public void removeFromPool(Set<Transaction> transactions) {
-        transactions.forEach(tx -> pool.put(tx.getHash(), null));
+
+        for(Transaction tx: transactions) {
+
+            pool.put(tx.getHash(), null);
+            if(pendingTransactions()) pending.put(tx.getHash(), null);
+        }
     }
 }

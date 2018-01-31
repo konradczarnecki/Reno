@@ -78,7 +78,7 @@ public class SimpleCryptoEngine implements CryptoEngine {
     }
 
     @Override
-    public boolean testKeys(String privateKey, String publicKey) {
+    public boolean testKeys(String publicKey, String privateKey) {
 
         String testSign = sign(privateKey, "test");
         return verifySignature(testSign, publicKey, "test");
@@ -126,6 +126,7 @@ public class SimpleCryptoEngine implements CryptoEngine {
 
         Signature sig = Signature.getInstance("SHA256withRSA");
         sig.initVerify(getPublicKey(publicKey));
+        sig.update(hash.getBytes());
         return sig.verify(DatatypeConverter.parseHexBinary(signature));
     }
 

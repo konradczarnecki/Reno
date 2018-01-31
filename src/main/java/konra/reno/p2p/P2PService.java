@@ -22,6 +22,7 @@ import java.nio.channels.SocketChannel;
 import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 @Service
 @FieldDefaults(level = AccessLevel.PRIVATE)
@@ -106,7 +107,10 @@ public class P2PService {
 
     private void sync() {
 
-        if(checkSync()) return;
+        if(checkSync()) {
+            exec.schedule(this::sync, config.getSyncRepeatTimeout(), TimeUnit.MILLISECONDS);
+            return;
+        }
 
         BlockHandler blockHandler = (BlockHandler) getHandler(BlockHandler.class);
         PeerHandler peerHandler = (PeerHandler) getHandler(PeerHandler.class);

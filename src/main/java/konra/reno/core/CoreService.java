@@ -35,8 +35,8 @@ public class CoreService {
 
     BlockRepository blockRepository;
     StateRepository stateRepository;
-    BlockConfiguration blockConfiguration;
     CoreConfig config;
+    @Getter BlockConfiguration blockConfiguration;
     @Getter CallbackHandler callbackHandler;
 
     @Getter TransactionPool transactionPool;
@@ -85,7 +85,7 @@ public class CoreService {
         return blockRepository.findBlocksByIdIsGreaterThanEqual(fromId);
     }
 
-    public void processNewBlocks(List<Block> incomingBlocks) {
+    synchronized public void processNewBlocks(List<Block> incomingBlocks) {
 
         incomingBlocks.forEach(this::processBlock);
     }
@@ -152,9 +152,6 @@ public class CoreService {
     }
 
     private void applyTransaction(Transaction transaction) {
-
-        if(transactionPool.pendingTransactions() && transactionPool.checkIfPending(transaction))
-            transactionPool.removePending(transaction);
 
         Account sender = stateRepository.findAccountByAddress(transaction.getSender());
         Account receiver = stateRepository.findAccountByAddress(transaction.getReceiver());

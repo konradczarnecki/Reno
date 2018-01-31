@@ -26,7 +26,6 @@ public class MinerService {
 
     CoreService core;
     TxPicker picker;
-    BlockConfiguration blockConfiguration;
     ScheduledExecutorService exec;
 
     boolean doMine;
@@ -34,21 +33,20 @@ public class MinerService {
 
     @Autowired
     public MinerService(CoreService core,
-                        TxPicker picker,
-                        BlockConfiguration blockConfiguration) {
+                        TxPicker picker) {
 
         this.core = core;
         this.picker = picker;
-        this.blockConfiguration = blockConfiguration;
         this.exec = Executors.newScheduledThreadPool(10);
         core.getCallbackHandler().register(CallbackType.MINE_NEW_BLOCK, this::restartMining);
     }
 
-    public void startMining(String minerAddress) {
+    public void startMining(String minerAddress, String message) {
 
         Block head = core.getHeadBlock();
         minedBlock = new Block(head);
         minedBlock.setMiner(minerAddress);
+        minedBlock.setMessage(message);
 
         Set<Transaction> txs = picker.pick(new HashSet<>(core.getTransactionPool().getPool().values()));
         minedBlock.setTransactions(txs);
@@ -62,9 +60,8 @@ public class MinerService {
         while(doMine) {
 
             minedBlock.bumpNonce();
-            minedBlock.setPow(minedBlock.hash());
 
-            if(minedBlock.verifyPOW(blockConfiguration.getDifficulty(minedBlock)))
+            if(minedBlock.prove(core.getBlockConfiguration().getDifficulty(minedBlock)))
                 core.processNewBlocks(Collections.singletonList(minedBlock));
         }
     }
@@ -78,6 +75,6 @@ public class MinerService {
 
         if(!doMine) return;
         stopMining();
-        startMining(minedBlock.getMiner());
+        startMining(minedBlock.getMiner(), minedBlock.getMessage());
     }
 }

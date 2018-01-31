@@ -57,6 +57,17 @@ public class Block {
         nonce++;
     }
 
+    public boolean prove(int difficulty) {
+
+        pow = hash();
+        return verifyPOW(difficulty);
+    }
+
+    public boolean validate(int difficulty) {
+
+        return hash().equals(pow) && verifyPOW(difficulty);
+    }
+
     public String hash() {
 
         if (transactionsHashCache.equals("")) {
@@ -66,7 +77,7 @@ public class Block {
             transactionsHashCache = Crypto.hash(transactionsHash.toString());
         }
 
-        return Crypto.hash(String.valueOf(id) + nonce + transactionsHashCache + previousPOW);
+        return Crypto.hash(String.valueOf(id) + nonce + timestamp + transactionsHashCache + previousPOW + miner + message);
     }
 
     public void setTransactions(Set<Transaction> transactions) {
@@ -81,14 +92,12 @@ public class Block {
         return mapper.writeValueAsString(this);
     }
 
-//    public String toString() {
-//
-//        return "\n----------------\nBlock " + id + "\n" +
-//                "Transactions: " + transactions.size() + "\n" +
-//                "POW:          " + pow + "\n" +
-//                "Previous POW: " + previousPOW + "\n" +
-//                "---------------\n";
-//    }
+    private boolean verifyPOW(int difficulty) {
+
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < difficulty; i++) sb.append("0");
+        return difficulty == 0 || pow.substring(0, difficulty).equals(sb.toString());
+    }
 
     @SneakyThrows
     public static Block parse(String data) {
@@ -97,15 +106,11 @@ public class Block {
         return mapper.readValue(data, Block.class);
     }
 
-    public boolean validate(int difficulty) {
+    public boolean equals(Object o) {
 
-        return hash().equals(pow) && verifyPOW(difficulty);
-    }
+        if(o == null || o.getClass() != getClass()) return false;
+        Block other = (Block) o;
 
-    public boolean verifyPOW(int difficulty) {
-
-        StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < difficulty; i++) sb.append("0");
-        return difficulty == 0 || pow.substring(0, difficulty).equals(sb.toString());
+        return this.hash().equals(other.hash());
     }
 }

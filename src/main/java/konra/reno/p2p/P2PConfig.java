@@ -16,4 +16,5 @@ public class P2PConfig {
     int initHosts;
     int maxHosts;
     int maxBlocksPerTransfer;
+    int syncRepeatTimeout;
 }

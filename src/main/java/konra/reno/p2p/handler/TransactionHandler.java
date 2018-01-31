@@ -71,8 +71,8 @@ public class TransactionHandler implements MessageHandler {
 
         for(HostInfo host: P2PService.hosts().values()){
 
-            try {
-                SocketChannel sc = SocketChannel.open(new InetSocketAddress(host.getAddress(), host.getPort()));
+            try(SocketChannel sc = SocketChannel.open(new InetSocketAddress(host.getAddress(), host.getPort()))) {
+
                 while(bb.hasRemaining()) sc.write(bb);
                 bb.flip();
 

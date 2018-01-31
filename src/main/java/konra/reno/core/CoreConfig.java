@@ -10,4 +10,6 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @Getter @Setter
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class CoreConfig {
+
+    int maxTxsInPool;
 }

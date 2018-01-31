@@ -1,6 +1,4 @@
-package konra.reno;
-
-import konra.reno.crypto.Crypto;
+package konra.reno.crypto;
 
 import static org.junit.Assert.*;
 
@@ -43,9 +41,13 @@ public class CryptoTest {
     }
 
     @Test
-    public void testHash() {
+    public void testSignature() {
 
-        String hash = Crypto.hash("dupa123");
-        System.out.println(hash);
+        KeysDto keys = Crypto.keyPair();
+
+        String message = "msg";
+        String signature =  Crypto.sign(keys.getPrivateKey(), message);
+
+        assertTrue(Crypto.verifySignature(signature, keys.getPublicKey(), message));
     }
 }

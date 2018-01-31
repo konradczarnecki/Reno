@@ -3,6 +3,7 @@ package konra.reno.miner;
 import konra.reno.util.Response;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -16,7 +17,9 @@ public class MinerController {
     }
 
     @GetMapping("/mine")
-    public Response mine(){
+    public Response mine(@RequestParam("miner") String miner, @RequestParam("message") String message){
+
+        service.startMining(miner, message);
 
         return Response.success();
     }
@@ -24,6 +27,7 @@ public class MinerController {
     @GetMapping("/stop-mining")
     public Response stopMine(){
 
+        service.stopMining();
 
         return Response.success();
     }

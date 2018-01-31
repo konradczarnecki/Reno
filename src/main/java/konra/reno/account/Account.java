@@ -10,12 +10,9 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 
 @Document(collection = "state")
-@EqualsAndHashCode
-@AllArgsConstructor
+@Data
 @NoArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-@ToString
-@Getter @Setter
 @Builder
 public class Account {
 
