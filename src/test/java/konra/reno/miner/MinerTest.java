@@ -27,6 +27,6 @@ public class MinerTest {
         Account miner = Account.create();
         service.startMining(miner.getAddress(), "dupaa");
 
-        Thread.sleep(600000);
+        Thread.sleep(500000000);
     }
 }

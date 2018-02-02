@@ -74,7 +74,7 @@ public class CoreService {
         callbackHandler.execute(CallbackType.HEAD_EXCHANGE);
         callbackHandler.execute(CallbackType.MINE_NEW_BLOCK);
 
-        log.debug("New head: " + headBlock.toString());
+        log.info("New head: " + headBlock.toString());
     }
 
     public List<Block> getBlocks(long fromId, long count) {

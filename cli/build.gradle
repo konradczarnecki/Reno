@@ -23,7 +23,6 @@ repositories {
 	maven { url "https://repo.spring.io/milestone" }
 }
 
-
 dependencies {
 	compile('org.springframework.shell:spring-shell-starter:2.0.0.M2')
 	compile('org.springframework.boot:spring-boot-starter-web')
@@ -31,3 +30,4 @@ dependencies {
 	compileOnly('org.projectlombok:lombok')
 	testCompile('org.springframework.boot:spring-boot-starter-test')
 }
+
