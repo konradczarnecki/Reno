@@ -97,7 +97,7 @@ public class CoreService {
         while(headBlock.getId() >= blockId) rollbackLastBlock();
     }
 
-    public void addNewTransaction(Transaction transaction) {
+    synchronized public void addNewTransaction(Transaction transaction) {
 
         transactionPool.addPending(transaction);
         callbackHandler.execute(CallbackType.TRANSACTION, transaction);

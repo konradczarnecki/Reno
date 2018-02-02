@@ -48,6 +48,7 @@ public class Block {
         } else {
             id = 1;
             previousPOW = "reno" + timestamp;
+            pow = "reno";
         }
     }
 

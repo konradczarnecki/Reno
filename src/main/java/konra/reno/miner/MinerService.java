@@ -48,7 +48,7 @@ public class MinerService {
         minedBlock.setMiner(minerAddress);
         minedBlock.setMessage(message);
 
-        Set<Transaction> txs = picker.pick(new HashSet<>(core.getTransactionPool().getPool().values()));
+        Set<Transaction> txs = picker.pick(core.getTransactionPool().txsInPool());
         minedBlock.setTransactions(txs);
 
         doMine = true;

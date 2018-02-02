@@ -6,6 +6,7 @@ import lombok.Setter;
 import lombok.experimental.FieldDefaults;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Getter
@@ -17,13 +18,14 @@ public class TransactionPool {
 
     public TransactionPool() {
 
-        fillPool = false;
+        fillPool = true;
         pool = new HashMap<>();
         pending = new HashMap<>();
     }
 
     public void addPending(Transaction t) {
         pending.put(t.getHash(), t);
+        if(fillPool) pool.put(t.getHash(), t);
     }
 
     public void removePending(Transaction t) {
@@ -53,5 +55,13 @@ public class TransactionPool {
             pool.put(tx.getHash(), null);
             if(pendingTransactions()) pending.put(tx.getHash(), null);
         }
+    }
+
+    public Set<Transaction> txsInPool() {
+
+        return pool.values()
+                .stream()
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet());
     }
 }
