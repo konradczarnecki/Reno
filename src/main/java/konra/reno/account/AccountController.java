@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -33,9 +34,9 @@ public class AccountController {
     }
 
     @GetMapping("/login")
-    public Response<Account> login(String publicKey, String privateKey) {
+    public Response<Account> login(@RequestBody KeysDto keys) {
 
-        Account account = service.login(publicKey, privateKey);
+        Account account = service.login(keys.getPublicKey(), keys.getPrivateKey());
 
         Response<Account> rsp = new Response<>();
         rsp.setStatus("success");

@@ -10,6 +10,9 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Transient;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.*;
 
 @Document(collection = "blockchain")
@@ -38,7 +41,7 @@ public class Block {
 
         nonce = 0;
         transactions = new HashSet<>();
-        timestamp = System.currentTimeMillis();
+        timestamp = Instant.now().toEpochMilli();
         pow = "";
         transactionsHashCache = "";
 

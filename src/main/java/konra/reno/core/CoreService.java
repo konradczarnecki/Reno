@@ -21,6 +21,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.annotation.PostConstruct;
 import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -59,13 +60,11 @@ public class CoreService {
     }
 
     @Transactional
-    public boolean startBlockchain() {
+    public void startBlockchain() {
 
         Block initialBlock = new Block(null);
         blockRepository.save(initialBlock);
         setHeadBlock(initialBlock);
-
-        return true;
     }
 
     public void setHeadBlock(Block head) {

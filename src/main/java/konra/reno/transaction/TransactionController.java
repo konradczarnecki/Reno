@@ -19,7 +19,7 @@ public class TransactionController {
         this.service = service;
     }
 
-    @GetMapping("/new-transaction")
+    @PostMapping("/new-transaction")
     public Response<Transaction> newTransaction(@RequestBody Transaction transaction, @RequestParam("key") String key) {
 
         Transaction created = service.newTx(transaction, key);

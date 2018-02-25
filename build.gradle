@@ -47,10 +47,9 @@ dependencies {
 //	compile group: 'org.projectlombok', name: 'lombok', version: '1:16:10'
 }
 
-
-task renoCli(type: Exec){
-	group 'application'
-	workingDir "${project.buildDir}/classes/main/konra/reno/cli"
-	executable 'java'
-	args = ["Cli"]
+task runJar(type: Exec) {
+	group 'app'
+	workingDir file("${project.buildDir}/libs")
+	commandLine = ['java', '-jar', "${project.name}-${project.version}.jar", '--spring.profiles.active=master']
+	dependsOn build
 }

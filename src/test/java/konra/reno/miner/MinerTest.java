@@ -57,8 +57,8 @@ public class MinerTest {
         core.startBlockchain();
 
         service.startMining(miner.getAddress(), "dupaa");
-        exec.schedule(this::addTransaction, 5000, TimeUnit.MILLISECONDS);
-        Thread.sleep(10000);
+        exec.schedule(this::addTransaction, 500, TimeUnit.MILLISECONDS);
+        Thread.sleep(1000000);
 
         service.stopMining();
 

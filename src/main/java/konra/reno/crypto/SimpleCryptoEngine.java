@@ -72,8 +72,8 @@ public class SimpleCryptoEngine implements CryptoEngine {
         KeyPair pair = keyPairGenerator.generateKeyPair();
 
         KeysDto keys = new KeysDto();
-        keys.setPrivateKey(DatatypeConverter.printHexBinary(pair.getPrivate().getEncoded()));
         keys.setPublicKey(DatatypeConverter.printHexBinary(pair.getPublic().getEncoded()));
+        keys.setPrivateKey(DatatypeConverter.printHexBinary(pair.getPrivate().getEncoded()));
         return keys;
     }
 
