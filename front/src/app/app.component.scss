@@ -1,0 +1,41 @@
+@import 'common';
+
+#mainFrame {
+  @include size(900px, 500px);
+  @include absolute-center;
+  @include grid-stretch(1fr, 20% 1fr);
+  @include mdc-elevation(16);
+  @include font;
+  border-radius: 3px;
+}
+
+#sideMenu {
+  @include grid-stretch(repeat(4, 1fr), 1fr);
+}
+
+.menuLink {
+  @include grid-center(1fr, 1fr);
+  font-size: 18px;
+  outline: none;
+
+  &:hover:not(.active) {
+    cursor: pointer;
+    background: $marked-clr;
+  }
+}
+
+.mainClrBack {
+  background: $main-clr;
+}
+
+.active {
+  background: $main-clr;
+}
+
+#logo {
+  @include font(45px, transparentize($font-clr, 0.5), true);
+  @include absolute(20px, null, null, 30px);
+  font-weight: 600;
+}
+
+

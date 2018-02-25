@@ -1,0 +1,49 @@
+@import '../common';
+
+#wrapper {
+  @include size100p;
+  position: relative;
+}
+
+#baseView {
+  @include size(65%, 160px);
+  @include absolute-center;
+
+  input {
+    visibility: hidden;
+  }
+}
+
+.button {
+  @include size(100%, 70px);
+  @include mdc-elevation(2);
+  @include grid-center;
+  margin-bottom: 10px;
+  background: $main-clr;
+
+  &:hover {
+    cursor: pointer;
+    background: darken($main-clr, 8);
+  }
+
+  &:active {
+    @include mdc-elevation(0);
+  }
+}
+
+#login {
+  @include size(65%, 160px);
+  @include absolute-center;
+
+  input {
+    @include size(100%, 40px);
+    border: none;
+    border-bottom: solid 1px transparentize($font-clr, 0.6);
+    margin-bottom: 20px;
+    font-size: 17px;
+  }
+}
+
+.fullFrame {
+  @include size100p;
+}
