@@ -5,13 +5,14 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @NoArgsConstructor
+@Getter @Setter
 public class Response<T> {
 
-    @Getter @Setter private String status;
-    @Getter @Setter private String message;
-    @Getter @Setter private T content;
+    private String status;
+    private String message;
+    private T content;
 
-    private Response(String status){
+    public Response(String status){
         this.status = status;
     }
 

@@ -35,13 +35,51 @@ public class AccountService {
         return Account.create();
     }
 
-    public Account login(String publicKey, String privateKey) {
+    public Account login(KeysDto keys) {
 
         // TODO after implemented change to KeysMismatchException
-        if(!Crypto.testKeys(publicKey, privateKey)) throw new RuntimeException("Keys don't match.");
+        if(!Crypto.testKeys(keys.getPublicKey(), keys.getPrivateKey())) throw new RuntimeException("Keys don't match.");
 
-        Account account = stateRepository.findAccountByAddress(publicKey);
-        if(account == null) account = new Account(publicKey);
+        Account account = stateRepository.findAccountByAddress(keys.getPublicKey());
+        if(account == null) account = new Account(keys.getPublicKey());
         return account;
+    }
+
+    public Account login(String encryptedKeyfile, String password) {
+
+        KeysDto keys = decryptKeyfile(encryptedKeyfile, password);
+        return login(keys);
+    }
+
+    public KeysDto decryptKeyfile(String encryptedKeyfile, String password) {
+
+        String[] decrypted = Crypto.decryptHexSymmetric(passwordPadding(password), encryptedKeyfile).split(":");
+        return new KeysDto(decrypted[0], decrypted[1]);
+    }
+
+    public String encryptKeyfile(KeysDto keys, String password) {
+
+        String keysDecrypted = keys.getPublicKey() + ":" + keys.getPrivateKey();
+        return Crypto.encryptHexSymmetric(passwordPadding(password), keysDecrypted);
+    }
+
+    public String encryptKeyfile(String publicKey, String privateKay, String password) {
+
+        KeysDto keys = new KeysDto(publicKey, privateKay);
+        return encryptKeyfile(keys, password);
+    }
+
+    private String passwordPadding(String unpadded) {
+
+        if(unpadded.length() == 16) return unpadded;
+
+        String padded = unpadded;
+
+        if(unpadded.length() < 16)
+            for(int i = unpadded.length(); i < 16; i++) padded += 'a';
+
+        else padded = unpadded.substring(0, 16);
+
+        return padded;
     }
 }

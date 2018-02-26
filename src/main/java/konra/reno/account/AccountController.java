@@ -3,16 +3,22 @@ package konra.reno.account;
 import konra.reno.util.KeysDto;
 import konra.reno.util.Response;
 import lombok.AccessLevel;
+import lombok.SneakyThrows;
 import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.mongodb.core.mapping.Field;
-import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.core.io.FileSystemResource;
+import org.springframework.http.MediaType;
+import org.springframework.web.bind.annotation.*;
+
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.nio.file.Files;
 
 @RestController
 @FieldDefaults(level = AccessLevel.PRIVATE)
+@Slf4j
 public class AccountController {
 
     AccountService service;
@@ -33,10 +39,26 @@ public class AccountController {
         return rsp;
     }
 
-    @GetMapping("/login")
-    public Response<Account> login(@RequestBody KeysDto keys) {
+    @SneakyThrows
+    @GetMapping(value = "/encrypt-keyfile", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
+    public FileSystemResource encryptKeyfile(@RequestParam("publicKey") String publicKey,
+                                             @RequestParam("privateKey") String privateKey,
+                                             @RequestParam("password") String password) {
 
-        Account account = service.login(keys.getPublicKey(), keys.getPrivateKey());
+        String encrypted = service.encryptKeyfile(publicKey, privateKey, password);
+        File temp = File.createTempFile("keystore", ".ks");
+        BufferedWriter bw = new BufferedWriter(new FileWriter(temp));
+        bw.write(encrypted);
+        bw.close();
+
+        return new FileSystemResource(temp);
+    }
+
+    @GetMapping("/login-keyfile")
+    public Response<Account> loginWithKeyfile(@RequestParam("keyfileContent") String keyfile,
+                                              @RequestParam("password") String password) {
+
+        Account account = service.login(keyfile, password);
 
         Response<Account> rsp = new Response<>();
         rsp.setStatus("success");

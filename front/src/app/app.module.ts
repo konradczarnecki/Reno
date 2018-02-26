@@ -12,6 +12,7 @@ import { ExploreComponent } from './explore/explore.component';
 import { AccountService } from './service/account.service';
 import { FetchService } from './service/fetch.service';
 import {HttpClientModule} from '@angular/common/http';
+import {FormsModule} from "@angular/forms";
 
 export const routes: Routes = [
   { path : '', component : LoginComponent, pathMatch : 'full' },
@@ -34,7 +35,8 @@ export const routes: Routes = [
   imports: [
     BrowserModule,
     RouterModule.forRoot(routes),
-    HttpClientModule
+    HttpClientModule,
+    FormsModule
   ],
   providers: [AccountService, FetchService],
   bootstrap: [AppComponent]

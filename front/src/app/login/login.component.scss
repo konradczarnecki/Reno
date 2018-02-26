@@ -31,7 +31,7 @@
   }
 }
 
-#login {
+#login, #register {
   @include size(65%, 160px);
   @include absolute-center;
 
@@ -44,6 +44,15 @@
   }
 }
 
-.fullFrame {
-  @include size100p;
+#register {
+  @include size(65%, 400px);
+
+  #privateKey {
+    @include size(100%, 150px);
+    word-wrap: break-word;
+  }
+}
+
+.hidden {
+  visibility: hidden;
 }

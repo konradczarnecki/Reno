@@ -1,15 +1,13 @@
 package konra.reno.util;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 import java.security.KeyPair;
 
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter @Setter
+@ToString
 public class KeysDto {
 
     private String publicKey;

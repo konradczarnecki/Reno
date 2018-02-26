@@ -3,19 +3,23 @@
   <div id="baseView" *ngIf="state == 'base'">
 
     <div class="button" id="loginButton" (click)="clickLogin()">Login</div>
-    <div class="button" id="createAccountButton">Create account</div>
+    <div class="button" id="createAccountButton" (click)="clickCreateAccount()">Create account</div>
     <input type="file" #fileInput/>
 
   </div>
 
   <div id="login" *ngIf="state == 'login'">
 
-    <input type="password" placeholder="Password"/>
-    <div class="button" id="submitButton">Submit</div>
+    <input type="password" placeholder="Password" [(ngModel)]="password"/>
+    <div class="button" id="submitButton" (click)="clickSubmit()">Submit</div>
 
   </div>
 
-  <div class="fullFrame" id="register" *ngIf="state == 'register'">
+  <div id="register" *ngIf="state == 'register'">
+
+    <input type="password" placeholder="Choose password for keystore file" [(ngModel)]="password"/>
+    <div class="button" id="encryptKeyfileButton" (click)="clickEncryptKeyfile()">Download</div>
+    <a class="hidden" [href]="encryptLink()" #downloadFile></a>
 
   </div>
 
