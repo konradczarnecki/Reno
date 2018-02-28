@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import {AccountService} from "../service/account.service";
 
 @Component({
   selector: 'app-top',
@@ -7,9 +8,16 @@ import { Component, OnInit } from '@angular/core';
 })
 export class TopComponent implements OnInit {
 
-  constructor() { }
+  addressVisible: boolean;
+
+  constructor(private accountService: AccountService) { }
 
   ngOnInit() {
+    this.addressVisible = false;
+  }
+
+  get account() {
+    return this.accountService.account;
   }
 
 }

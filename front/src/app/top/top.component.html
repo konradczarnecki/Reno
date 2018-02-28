@@ -1,3 +1,12 @@
-<p>
-  top works!
-</p>
+<div id="wrapper">
+
+  <div id="topRow">
+
+    <div id="balance">{{account.balance}} R</div>
+    <div id="showAddress" class="button" (click)="addressVisible = true">Show address</div>
+
+  </div>
+
+  <div id="address" *ngIf="addressVisible">{{account.address}}</div>
+
+</div>

@@ -1,6 +1,9 @@
 package konra.reno.account;
 
+import com.fasterxml.jackson.annotation.JsonGetter;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import konra.reno.crypto.Crypto;
+import konra.reno.util.EncodingUtil;
 import konra.reno.util.KeysDto;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -22,6 +25,7 @@ public class Account {
     long balance;
 
     @Transient
+    @JsonProperty
     KeysDto keys;
 
     public Account(String address){

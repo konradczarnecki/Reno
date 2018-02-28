@@ -1,6 +1,5 @@
-import {AfterViewInit, Component, ElementRef, OnInit, ViewChild} from '@angular/core';
+import {AfterViewInit, ChangeDetectorRef, Component, ElementRef, OnInit, ViewChild} from '@angular/core';
 import {AccountService} from '../service/account.service';
-import {KeysDto} from "../model";
 import {Router} from "@angular/router";
 import {environment} from "../../environments/environment";
 
@@ -17,17 +16,18 @@ export class LoginComponent implements OnInit, AfterViewInit {
   state: string;
   password: string;
 
-  constructor(private accountService: AccountService, private router: Router) {
+  constructor(private accountService: AccountService,
+              private router: Router,
+              private cdr: ChangeDetectorRef) { }
+
+  ngOnInit() {
 
     this.state = 'base';
   }
 
-  ngOnInit() {
-  }
-
   ngAfterViewInit() {
 
-    this.fileInput.nativeElement.addEventListener('change', this.readFile.bind(this), false);
+    this.registerKeystoreUploadListener();
   }
 
   clickLogin() {
@@ -37,10 +37,7 @@ export class LoginComponent implements OnInit, AfterViewInit {
 
   clickSubmit() {
 
-    this.accountService.login(this.password).subscribe(rsp => {
-
-      if(rsp.status == 'success') this.router.navigate(['/account']);
-    });
+    this.accountService.login(this.password);
   }
 
   clickCreateAccount() {
@@ -52,6 +49,8 @@ export class LoginComponent implements OnInit, AfterViewInit {
 
     this.downloadFile.nativeElement.click();
     this.state = 'base';
+    this.cdr.detectChanges();
+    this.registerKeystoreUploadListener();
   }
 
   readFile(e) {
@@ -75,17 +74,17 @@ export class LoginComponent implements OnInit, AfterViewInit {
     return true;
   }
 
-  keys(): KeysDto {
-
-    return this.accountService.keysDto;
-  }
-
   encryptLink(): string {
 
     return environment.apiUrl + '/encrypt-keyfile?' +
-      'privateKey=' + this.accountService.keysDto.privateKey +
-      '&publicKey=' + this.accountService.keysDto.publicKey +
+      'privateKey=' + this.accountService.account.keys.privateKey +
+      '&publicKey=' + this.accountService.account.keys.publicKey +
       '&password=' + this.password;
   }
 
+  registerKeystoreUploadListener() {
+
+    console.log('abc');
+    this.fileInput.nativeElement.addEventListener('change', this.readFile.bind(this), false);
+  }
 }

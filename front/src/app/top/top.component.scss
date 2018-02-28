@@ -1,0 +1,52 @@
+@import "../common";
+
+#wrapper {
+  @include size100p;
+  @include font(14px);
+  @include grid-stretch(60px 1fr, 1fr);
+  padding: 20px;
+  padding-left: 40px;
+}
+
+#balance {
+  font-size: 35px;
+  justify-self: left;
+}
+
+#showAddress {
+  justify-self: left;
+}
+
+#topRow {
+  @include self-stretch;
+  @include grid-center(1fr, 100px 1fr);
+}
+
+#address {
+  @include size(90%, 35px);
+  justify-self: left;
+  margin-top: 5px;
+  word-wrap: break-word;
+  word-break: break-all;
+}
+
+.button {
+  @include size(120px, 40px);
+  @include mdc-elevation(2);
+  @include grid-center;
+
+  background: white;
+  color: $font-clr;
+  @include border(1px, $main-clr);
+
+  &:hover {
+    cursor: pointer;
+    background: darken(white, 8);
+  }
+
+  &:active {
+    @include mdc-elevation(0);
+  }
+}
+
+

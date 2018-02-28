@@ -11,4 +11,5 @@ export interface KeysDto {
 export interface Account {
   address: string;
   balance: number;
+  keys: KeysDto;
 }

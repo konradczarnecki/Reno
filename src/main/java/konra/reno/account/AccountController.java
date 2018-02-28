@@ -29,13 +29,13 @@ public class AccountController {
     }
 
     @GetMapping("/new-account")
-    public Response<KeysDto> newAccount() {
+    public Response<Account> newAccount() {
 
         Account account = service.createAccount();
 
-        Response<KeysDto> rsp = new Response<>();
+        Response<Account> rsp = new Response<>();
         rsp.setStatus("success");
-        rsp.setContent(account.getKeys());
+        rsp.setContent(account);
         return rsp;
     }
 

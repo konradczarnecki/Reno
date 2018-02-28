@@ -13,13 +13,15 @@ import { AccountService } from './service/account.service';
 import { FetchService } from './service/fetch.service';
 import {HttpClientModule} from '@angular/common/http';
 import {FormsModule} from "@angular/forms";
+import {MatButtonModule} from "@angular/material";
 
 export const routes: Routes = [
-  { path : '', component : LoginComponent, pathMatch : 'full' },
-  { path : 'account', component : AccountComponent },
-  { path : 'send', component : SendComponent },
-  { path : 'mine', component : MineComponent },
-  { path : 'explore', component : ExploreComponent }
+  { path : '', redirectTo : '/login' , pathMatch : 'full' },
+  { path : 'login', component : LoginComponent },
+  { path : 'account', component : AccountComponent, canActivate : [AccountService] },
+  { path : 'send', component : SendComponent, canActivate : [AccountService] },
+  { path : 'mine', component : MineComponent, canActivate : [AccountService] },
+  { path : 'explore', component : ExploreComponent, canActivate : [AccountService] }
 ];
 
 @NgModule({

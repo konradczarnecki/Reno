@@ -10,6 +10,7 @@ import konra.reno.util.FileService;
 import konra.reno.util.KeysDto;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -17,6 +18,7 @@ import java.security.KeyPair;
 
 @Service
 @FieldDefaults(level = AccessLevel.PRIVATE)
+@Slf4j
 public class AccountService {
 
     CoreService core;
@@ -79,6 +81,8 @@ public class AccountService {
             for(int i = unpadded.length(); i < 16; i++) padded += 'a';
 
         else padded = unpadded.substring(0, 16);
+
+        log.info(padded);
 
         return padded;
     }
