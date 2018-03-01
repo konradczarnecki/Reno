@@ -2,11 +2,15 @@
 
   <div id="topRow">
 
-    <div id="balance">{{account.balance}} R</div>
-    <div id="showAddress" class="button" (click)="addressVisible = true">Show address</div>
+    <div id="balance">{{account.balance}} <span id="R">Я</span></div>
 
   </div>
 
-  <div id="address" *ngIf="addressVisible">{{account.address}}</div>
+  <div id="bottomRow" *ngIf="!addressVisible">
+    <div id="showAddress" class="button" (click)="addressVisible = true">Show address</div>
+    <div id="logout" class="button" (click)="logout()">Logout</div>
+  </div>
+
+  <div id="address" title="Copy to clipboard and hide" (click)="addressVisible = false" *ngIf="addressVisible">{{account.address}}</div>
 
 </div>

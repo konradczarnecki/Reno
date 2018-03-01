@@ -10,32 +10,32 @@
 }
 
 #sideMenu {
-  @include grid-stretch(repeat(4, 1fr), 1fr);
+  @include grid-center(repeat(4, 1fr), 1fr);
 }
 
 .menuLink {
   @include grid-center(1fr, 1fr);
+  border-bottom: 2px solid transparent;
+  box-sizing: border-box;
+  padding: 5px;
   font-size: 18px;
-  outline: none;
 
   &:hover:not(.active) {
     cursor: pointer;
-    background: $marked-clr;
+    border-bottom: 2px solid $marked-clr;
   }
 }
 
-.mainClrBack {
-  background: $main-clr;
-}
-
 .active {
-  background: $main-clr;
+  border-bottom: 2px solid $main-clr;
+  cursor: default;
 }
 
 #logo {
   @include font(45px, transparentize($font-clr, 0.5), true);
   @include absolute(20px, null, null, 30px);
   font-weight: 600;
+  color: transparentize($main-clr, 0.5);
 }
 
 

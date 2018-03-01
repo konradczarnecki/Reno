@@ -12,7 +12,7 @@
 
 $font-url: 'https://fonts.googleapis.com/css?family=';
 $font: 'Comfortaa'; //Comfortaa,
-$font2: 'Julius Sans One'; //Julius Sans One
+$font2: 'Armata'; //Julius Sans One
 $url1: $font-url + str-replace($font, ' ', '+');
 $url2: $font-url + str-replace($font2, ' ', '+');
 @import url($url1);
@@ -20,11 +20,13 @@ $url2: $font-url + str-replace($font2, ' ', '+');
 
 $font-clr: rgba(41, 41, 41, 0.83);
 $hover-clr: rgba(239, 240, 246, 0.3);
-$marked-clr: rgba(225, 225, 235, 0.43);
-$main-clr: rgba(217, 34, 92, 0.86);
+$marked-clr: rgba(164, 164, 174, 0.7);
+$main-clr: rgb(140, 99, 138);
 $green: #4b954b;
 
 $red: #c53b49;
+//rgba(217, 48, 87, 0.86);
+
 
 $mobile-treshhold: 20cm; // remember to change also in AppComponent
 

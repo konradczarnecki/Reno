@@ -19,11 +19,13 @@
   @include mdc-elevation(2);
   @include grid-center;
   margin-bottom: 10px;
-  background: $main-clr;
+  border-radius: 2px;
+  //background: $main-clr;
+  @include border(1px, $main-clr);
 
   &:hover {
     cursor: pointer;
-    background: darken($main-clr, 8);
+    background: $hover-clr;
   }
 
   &:active {

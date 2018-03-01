@@ -20,4 +20,8 @@ export class TopComponent implements OnInit {
     return this.accountService.account;
   }
 
+  logout() {
+    this.accountService.logout();
+  }
+
 }

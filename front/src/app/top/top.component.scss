@@ -3,23 +3,25 @@
 #wrapper {
   @include size100p;
   @include font(14px);
-  @include grid-stretch(60px 1fr, 1fr);
-  padding: 20px;
-  padding-left: 40px;
+  @include grid-stretch(50px 1fr, 1fr);
+  padding: 30px;
 }
 
+$balance-fs: 42px;
+
 #balance {
-  font-size: 35px;
+  font-size: $balance-fs;
   justify-self: left;
+  color: lighten($font-clr, 30);
+  font-family: $font2;
 }
 
 #showAddress {
-  justify-self: left;
+  justify-self: center;
 }
 
 #topRow {
   @include self-stretch;
-  @include grid-center(1fr, 100px 1fr);
 }
 
 #address {
@@ -28,25 +30,41 @@
   margin-top: 5px;
   word-wrap: break-word;
   word-break: break-all;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+#bottomRow {
+  justify-self: left;
+  display: flex;
+  margin-top: 10px;
 }
 
 .button {
   @include size(120px, 40px);
   @include mdc-elevation(2);
   @include grid-center;
+  @include border(1px, $main-clr);
+  margin-left: 5px;
 
   background: white;
   color: $font-clr;
-  @include border(1px, $main-clr);
+  font-size: 13px;
+  border-radius: 2px;
 
   &:hover {
     cursor: pointer;
-    background: darken(white, 8);
+    background: $hover-clr;
   }
 
   &:active {
     @include mdc-elevation(0);
   }
+}
+
+#R {
+  font-size: $balance-fs + 3px;
+  color: transparentize($main-clr, 0.5);
 }
 
 

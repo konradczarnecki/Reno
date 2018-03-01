@@ -11,7 +11,9 @@ export class AccountService implements CanActivate {
   keyfileContent: string;
   account: Account;
 
-  constructor(private http: HttpClient, private router: Router) { }
+  constructor(private http: HttpClient, private router: Router) {
+    this.loadAccount();
+  }
 
   createAccount(): Observable<Response<Account>> {
 
@@ -37,6 +39,7 @@ export class AccountService implements CanActivate {
       if(rsp.status != 'success') return;
 
       this.account = rsp.content;
+      this.bindAccount();
       this.router.navigate(['/account']);
     });
 
@@ -51,6 +54,7 @@ export class AccountService implements CanActivate {
   logout() {
 
     this.account = undefined;
+    this.router.navigate(['/login']);
   }
 
   canActivate() {
@@ -59,4 +63,11 @@ export class AccountService implements CanActivate {
     return this.isLogged();
   }
 
+  bindAccount() {
+    localStorage.setItem('account', JSON.stringify(this.account));
+  }
+
+  loadAccount() {
+    this.account = JSON.parse(localStorage.getItem('account'));
+  }
 }
