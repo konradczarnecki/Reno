@@ -53,6 +53,14 @@ public class AccountService {
         return login(keys);
     }
 
+    public Account getAccountByAddress(String address) {
+
+        Account account = stateRepository.findAccountByAddress(address);
+        account = account != null ? account : new Account(address);
+
+        return account;
+    }
+
     public KeysDto decryptKeyfile(String encryptedKeyfile, String password) {
 
         String[] decrypted = Crypto.decryptHexSymmetric(passwordPadding(password), encryptedKeyfile).split(":");

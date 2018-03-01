@@ -20,18 +20,20 @@ public class P2PController {
         this.service = service;
     }
 
-    @GetMapping("/connect")
+    @GetMapping("/p2p-connect")
     public Response connect() {
 
         service.connect();
         return Response.success();
     }
 
-    @GetMapping("/check-connect")
-    public Response<Status> checkConnect() {
+    @GetMapping("/p2p-status")
+    public Response<P2PStatus> checkConnect() {
 
-        Status status = service.checkConnect();
-        Response<Status> rsp = (Response<Status>) Response.success();
+        P2PStatus status = service.checkStatus();
+
+        Response<P2PStatus> rsp = new Response<>();
+        rsp.setStatus("success");
         rsp.setContent(status);
         return rsp;
     }

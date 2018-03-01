@@ -1,3 +1,23 @@
 <div id="wrapper">
+
   <app-top></app-top>
+
+  <div id="minerBox">
+
+    <div id="startMiningButton" class="button mineButton"
+         *ngIf="!isMining()"
+         (click)="startMining()">
+      Start mining
+    </div>
+
+    <div id="stopMiningButton" class="button mineButton"
+         *ngIf="isMining()"
+         (click)="stopMining()">
+      Stop mining
+    </div>
+
+    <div id="hashesPerSecond">{{hashesPerSecondFormatted}} #/s</div>
+
+  </div>
+
 </div>

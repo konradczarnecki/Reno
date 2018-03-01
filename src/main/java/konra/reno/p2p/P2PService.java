@@ -81,9 +81,9 @@ public class P2PService {
         exec = Executors.newScheduledThreadPool(10);
     }
 
-    public Status checkConnect() {
+    public P2PStatus checkConnect() {
 
-        Status status = new Status();
+        P2PStatus status = new P2PStatus();
         status.setHostCount(hosts.size());
 
         int connectedHosts = (int) hosts.values().stream()
@@ -94,10 +94,19 @@ public class P2PService {
         return status;
     }
 
+    public P2PStatus checkStatus() {
+
+        P2PStatus status = checkConnect();
+        status.setHeadBlockId(core.getHeadBlock().getId());
+//        status.setInSync(checkSync());
+
+        return status;
+    }
+
     public void synchronize() {
 
         doSync = true;
-        Status status = checkConnect();
+        P2PStatus status = checkConnect();
 
         if(status.getConnectedHosts() == 0 || status.getHostCount() == 0)
             throw new IllegalStateException("No connected hosts to synchronize with.");

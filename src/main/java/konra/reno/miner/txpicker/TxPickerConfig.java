@@ -11,6 +11,6 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class TxPickerConfig {
 
-    int maxTxPerBlock = 10;
-    PickerStrategy strategy = PickerStrategy.HIGHIEST_FEE;
+    int maxTxPerBlock;
+    PickerStrategy strategy;
 }

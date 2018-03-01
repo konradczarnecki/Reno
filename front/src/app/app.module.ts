@@ -10,10 +10,11 @@ import { SendComponent } from './send/send.component';
 import { MineComponent } from './mine/mine.component';
 import { ExploreComponent } from './explore/explore.component';
 import { AccountService } from './service/account.service';
-import { FetchService } from './service/fetch.service';
+import { RestService} from './service/rest.service';
 import {HttpClientModule} from '@angular/common/http';
 import {FormsModule} from "@angular/forms";
 import {MatButtonModule} from "@angular/material";
+import {MinerService} from "./service/miner.service";
 
 export const routes: Routes = [
   { path : '', redirectTo : '/login' , pathMatch : 'full' },
@@ -40,7 +41,7 @@ export const routes: Routes = [
     HttpClientModule,
     FormsModule
   ],
-  providers: [AccountService, FetchService],
+  providers: [AccountService, RestService, MinerService],
   bootstrap: [AppComponent]
 })
 export class AppModule { }

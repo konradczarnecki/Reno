@@ -16,19 +16,31 @@ public class MinerController {
         this.service = service;
     }
 
-    @GetMapping("/mine")
-    public Response mine(@RequestParam("miner") String miner, @RequestParam("message") String message){
+    @GetMapping("/miner-start")
+    public Response mine(@RequestParam("miner") String miner,
+                         @RequestParam(value = "message", required = false, defaultValue = "") String message) {
 
         service.startMining(miner, message);
 
         return Response.success();
     }
 
-    @GetMapping("/stop-mining")
-    public Response stopMine(){
+    @GetMapping("/miner-stop")
+    public Response stopMine() {
 
         service.stopMining();
 
         return Response.success();
+    }
+
+    @GetMapping("/miner-status")
+    public Response<MinerStatus> minerStatus() {
+
+        MinerStatus status = service.checkStatus();
+
+        Response<MinerStatus> rsp = new Response<>();
+        rsp.setStatus("success");
+        rsp.setContent(status);
+        return rsp;
     }
 }

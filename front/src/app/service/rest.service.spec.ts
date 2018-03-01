@@ -1,6 +1,6 @@
 import { TestBed, inject } from '@angular/core/testing';
 
-import { FetchService } from './fetch.service';
+import { FetchService } from './rest.service';
 
 describe('FetchService', () => {
   beforeEach(() => {

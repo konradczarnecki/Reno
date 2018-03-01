@@ -6,6 +6,7 @@
   @include grid-stretch(1fr, 20% 1fr);
   @include mdc-elevation(16);
   @include font;
+  @include border(1px, transparentize($font-clr, 0.6));
   border-radius: 3px;
 }
 
@@ -19,6 +20,7 @@
   box-sizing: border-box;
   padding: 5px;
   font-size: 18px;
+  outline: none;
 
   &:hover:not(.active) {
     cursor: pointer;

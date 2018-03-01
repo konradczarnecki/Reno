@@ -2,7 +2,13 @@
 
   <div id="topRow">
 
-    <div id="balance">{{account.balance}} <span id="R">Я</span></div>
+    <div id="balance">{{account.balance / 1000000}} <span id="R">Я</span></div>
+
+    <div id="info">
+
+      <span>Peers: {{p2pStatus.connectedHosts}}</span>
+      <span>Block: {{p2pStatus.headBlockId}}</span>
+    </div>
 
   </div>
 

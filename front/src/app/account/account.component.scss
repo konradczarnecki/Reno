@@ -2,6 +2,5 @@
 
 #wrapper {
   @include size100p;
-  @include grid-stretch(150px 1fr, 1fr);
-
+  @include grid-stretch($topbar-height 1fr, 1fr);
 }

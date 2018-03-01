@@ -1,7 +1,7 @@
 @import "../common";
 
 #wrapper {
-  @include size100p;
+  @include size(85%, 100%);
   @include font(14px);
   @include grid-stretch(50px 1fr, 1fr);
   padding: 30px;
@@ -14,6 +14,7 @@ $balance-fs: 42px;
   justify-self: left;
   color: lighten($font-clr, 30);
   font-family: $font2;
+  cursor: default;
 }
 
 #showAddress {
@@ -22,12 +23,13 @@ $balance-fs: 42px;
 
 #topRow {
   @include self-stretch;
+  @include grid-center(1fr, 1fr 1fr);
 }
 
 #address {
-  @include size(90%, 35px);
+  //@include size(90%, 35px);
   justify-self: left;
-  margin-top: 5px;
+  margin-top: 15px;
   word-wrap: break-word;
   word-break: break-all;
   font-size: 13px;
@@ -35,9 +37,9 @@ $balance-fs: 42px;
 }
 
 #bottomRow {
-  justify-self: left;
+  justify-self: right;
   display: flex;
-  margin-top: 10px;
+  margin-top: 15px;
 }
 
 .button {
@@ -67,4 +69,15 @@ $balance-fs: 42px;
   color: transparentize($main-clr, 0.5);
 }
 
+#info {
+  @include font(16px);
+  justify-self: right;
+  align-self: start;
+  display: flex;
+  padding-top: 10px;
+
+  span {
+    margin-left: 20px;
+  }
+}
 

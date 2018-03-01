@@ -9,9 +9,10 @@ import lombok.experimental.FieldDefaults;
 @NoArgsConstructor
 @Getter @Setter
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class Status {
+public class P2PStatus {
 
     int hostCount;
     int connectedHosts;
     boolean inSync;
+    long headBlockId;
 }

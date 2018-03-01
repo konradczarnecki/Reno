@@ -8,6 +8,7 @@ import konra.reno.core.block.BlockConfiguration;
 import konra.reno.miner.txpicker.TxPicker;
 import konra.reno.transaction.Transaction;
 import lombok.AccessLevel;
+import lombok.SneakyThrows;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -78,5 +79,30 @@ public class MinerService {
         if(!doMine) return;
         stopMining();
         startMining(minedBlock.getMiner(), minedBlock.getMessage());
+    }
+
+    public MinerStatus checkStatus() {
+
+        MinerStatus status = new MinerStatus();
+        status.setHashesPerSecond(hashesPerSecond());
+        return status;
+    }
+
+    @SneakyThrows
+    private long hashesPerSecond() {
+
+        long blockId = minedBlock.getId();
+        long blockNonce = minedBlock.getNonce();
+        long time = System.nanoTime();
+
+        Thread.sleep(100);
+
+        long newBlockId = minedBlock.getId();
+        long newBlockNonce = minedBlock.getNonce();
+        long newTime = System.nanoTime();
+
+        long hashes = newBlockNonce - blockNonce;
+
+        return newBlockId == blockId ? 1000000000 * hashes / (newTime - time) : hashesPerSecond();
     }
 }

@@ -10,9 +10,10 @@ export class AccountService implements CanActivate {
 
   keyfileContent: string;
   account: Account;
+  refreshIntervalId: number;
 
   constructor(private http: HttpClient, private router: Router) {
-    this.loadAccount();
+    // this.loadAccount();
   }
 
   createAccount(): Observable<Response<Account>> {
@@ -40,6 +41,8 @@ export class AccountService implements CanActivate {
 
       this.account = rsp.content;
       this.bindAccount();
+      this.refreshIntervalId = setInterval(this.checkStatus.bind(this), environment.accountRefreshDelay);
+
       this.router.navigate(['/account']);
     });
 
@@ -55,6 +58,18 @@ export class AccountService implements CanActivate {
 
     this.account = undefined;
     this.router.navigate(['/login']);
+  }
+
+  checkStatus() {
+
+    const options = {
+
+      params : new HttpParams()
+        .set('address', this.account.address)
+    };
+
+    this.http.get<Response<Account>>(environment.apiUrl + '/account-status', options)
+      .subscribe(rsp => this.account = rsp.content);
   }
 
   canActivate() {

@@ -1,5 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import {AccountService} from "../service/account.service";
+import {RestService} from "../service/rest.service";
+import {P2PStatus} from "../model";
 
 @Component({
   selector: 'app-top',
@@ -9,11 +11,14 @@ import {AccountService} from "../service/account.service";
 export class TopComponent implements OnInit {
 
   addressVisible: boolean;
+  p2pStatus: P2PStatus;
 
-  constructor(private accountService: AccountService) { }
+  constructor(private accountService: AccountService, private rest: RestService) { }
 
   ngOnInit() {
     this.addressVisible = false;
+    this.getStatus();
+    setInterval(this.getStatus.bind(this), 2000);
   }
 
   get account() {
@@ -22,6 +27,13 @@ export class TopComponent implements OnInit {
 
   logout() {
     this.accountService.logout();
+  }
+
+  getStatus() {
+
+    this.rest.p2pStatus().subscribe(rsp => {
+      if(rsp.status == 'success') this.p2pStatus = rsp.content;
+    })
   }
 
 }

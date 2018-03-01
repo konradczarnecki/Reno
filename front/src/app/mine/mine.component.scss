@@ -1,0 +1,43 @@
+@import "../common";
+
+#wrapper {
+  @include size100p;
+  @include grid-stretch($topbar-height 1fr, 1fr);
+}
+
+#minerBox {
+  @include grid-center(50px 1fr, 1fr 2fr);
+  @include font(50px, transparentize($font-clr, 0.2));
+  padding: 30px;
+}
+
+#hashesPerSecond {
+  justify-self: left;
+}
+
+.button {
+  @include size(160px, 60px);
+  @include mdc-elevation(2);
+  @include grid-center;
+  @include border(1px, $main-clr);
+  margin-left: 5px;
+
+  background: white;
+  color: $font-clr;
+  font-size: 13px;
+  border-radius: 2px;
+
+  &:hover {
+    cursor: pointer;
+    background: $hover-clr;
+  }
+
+  &:active {
+    @include mdc-elevation(0);
+  }
+}
+
+.mineButton {
+  justify-self: left;
+}
+

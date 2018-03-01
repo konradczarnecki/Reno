@@ -65,4 +65,15 @@ public class AccountController {
         rsp.setContent(account);
         return rsp;
     }
+
+    @GetMapping("/account-status")
+    public Response<Account> accountStatus(@RequestParam("address") String address) {
+
+        Account account = service.getAccountByAddress(address);
+
+        Response<Account> rsp = new Response<>();
+        rsp.setStatus("status");
+        rsp.setContent(account);
+        return rsp;
+    }
 }

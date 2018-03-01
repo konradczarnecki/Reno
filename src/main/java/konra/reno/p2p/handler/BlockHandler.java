@@ -103,7 +103,7 @@ public class BlockHandler implements MessageHandler {
         long headDifference = core.getHeadBlock().getId() - requestBlockId;
         int blocksToSend = (int) (headDifference < config.getMaxBlocksPerTransfer() ? headDifference : config.getMaxBlocksPerTransfer());
 
-        List<Block> blocks = core.getBlocks(requestBlockId, blocksToSend);
+        List<Block> blocks = core.getBlocks(requestBlockId + 1, blocksToSend);
         writeBlocksToSocket(blocks, sc);
     }
 

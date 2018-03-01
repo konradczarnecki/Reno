@@ -5,5 +5,6 @@
 
 export const environment = {
   production: false,
-  apiUrl: 'http://localhost:8031'
+  apiUrl: 'http://localhost:8031',
+  accountRefreshDelay: 2000
 };
