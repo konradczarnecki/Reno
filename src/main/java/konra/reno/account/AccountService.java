@@ -90,8 +90,6 @@ public class AccountService {
 
         else padded = unpadded.substring(0, 16);
 
-        log.info(padded);
-
         return padded;
     }
 }

@@ -7,7 +7,7 @@
   padding: 30px;
 }
 
-$balance-fs: 42px;
+$balance-fs: 48px;
 
 #balance {
   font-size: $balance-fs;
@@ -65,7 +65,7 @@ $balance-fs: 42px;
 }
 
 #R {
-  font-size: $balance-fs + 3px;
+  font-size: $balance-fs + 2px;
   color: transparentize($main-clr, 0.5);
 }
 

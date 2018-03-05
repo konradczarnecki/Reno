@@ -32,7 +32,7 @@ public class TxPicker {
 
             case HIGHIEST_FEE:
                 chosen = pool.stream()
-                        .sorted(Comparator.comparingDouble(Transaction::getFee))
+                        .sorted(Comparator.comparingLong(Transaction::getFee))
                         .limit(config.getMaxTxPerBlock())
                         .collect(Collectors.toSet());
                 break;

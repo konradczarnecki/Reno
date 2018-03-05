@@ -4,19 +4,23 @@
 
   <div id="minerBox">
 
-    <div id="startMiningButton" class="button mineButton"
-         *ngIf="!isMining()"
-         (click)="startMining()">
-      Start mining
-    </div>
+    <div id="leftColumn">
 
-    <div id="stopMiningButton" class="button mineButton"
-         *ngIf="isMining()"
-         (click)="stopMining()">
-      Stop mining
-    </div>
+      <div id="hashesPerSecond">{{hashesPerSecondFormatted}} <span id="hashPerS">#/s</span></div>
 
-    <div id="hashesPerSecond">{{hashesPerSecondFormatted}} #/s</div>
+      <div id="startMiningButton" class="button mineButton"
+           *ngIf="!isMining()"
+           (click)="startMining()">
+        Start mining
+      </div>
+
+      <div id="stopMiningButton" class="button mineButton"
+           *ngIf="isMining()"
+           (click)="stopMining()">
+        Stop mining
+      </div>
+
+    </div>
 
   </div>
 

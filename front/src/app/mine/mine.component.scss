@@ -6,8 +6,8 @@
 }
 
 #minerBox {
-  @include grid-center(50px 1fr, 1fr 2fr);
-  @include font(50px, transparentize($font-clr, 0.2));
+  @include grid-stretch(1fr, 1fr 2fr);
+  @include font(55px, transparentize($font-clr, 0.2));
   padding: 30px;
 }
 
@@ -16,7 +16,7 @@
 }
 
 .button {
-  @include size(160px, 60px);
+  @include size(100%, 40px);
   @include mdc-elevation(2);
   @include grid-center;
   @include border(1px, $main-clr);
@@ -38,6 +38,15 @@
 }
 
 .mineButton {
-  justify-self: left;
+  //justify-self: left;
+}
+
+#hashPerS {
+  font-size: 20px;
+}
+
+#leftColumn {
+  @include grid-center(60px 60px 1fr, 1fr);
+
 }
 

@@ -48,6 +48,7 @@ public class MinerService {
         minedBlock = new Block(head);
         minedBlock.setMiner(minerAddress);
         minedBlock.setMessage(message);
+        core.getBlockConfiguration().setDifficulty(minedBlock);
 
         Set<Transaction> txs = picker.pick(core.getTransactionPool().txsInPool());
         minedBlock.setTransactions(txs);
@@ -62,7 +63,7 @@ public class MinerService {
 
             minedBlock.bumpNonce();
 
-            if(minedBlock.prove(core.getBlockConfiguration().getDifficulty(minedBlock))){
+            if(minedBlock.prove()){
                 core.processNewBlocks(Collections.singletonList(minedBlock));
                 break;
             }

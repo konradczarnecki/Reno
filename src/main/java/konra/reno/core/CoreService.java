@@ -18,6 +18,7 @@ import lombok.Setter;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -47,9 +48,9 @@ public class CoreService {
     @Autowired
     public CoreService(BlockRepository blockRepository,
                        StateRepository stateRepository,
-                       BlockConfiguration blockConfiguration,
                        CoreConfig config,
-                       CallbackHandler callbackHandler) {
+                       CallbackHandler callbackHandler,
+                       @Qualifier("simpleConfig") BlockConfiguration blockConfiguration) {
 
         this.blockRepository = blockRepository;
         this.stateRepository = stateRepository;
@@ -57,6 +58,12 @@ public class CoreService {
         this.callbackHandler = callbackHandler;
         this.config = config;
         this.transactionPool = new TransactionPool();
+    }
+
+    @PostConstruct
+    public void init() {
+
+        headBlock = blockRepository.findTopByOrderByIdDesc();
     }
 
     @Transactional

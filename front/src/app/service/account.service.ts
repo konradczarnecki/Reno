@@ -13,7 +13,7 @@ export class AccountService implements CanActivate {
   refreshIntervalId: number;
 
   constructor(private http: HttpClient, private router: Router) {
-    // this.loadAccount();
+    this.loadAccount();
   }
 
   createAccount(): Observable<Response<Account>> {

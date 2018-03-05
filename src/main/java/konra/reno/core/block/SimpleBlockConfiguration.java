@@ -2,7 +2,7 @@ package konra.reno.core.block;
 
 import org.springframework.stereotype.Service;
 
-@Service
+@Service("simpleConfig")
 public class SimpleBlockConfiguration implements BlockConfiguration {
 
     @Override

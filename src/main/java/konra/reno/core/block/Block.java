@@ -28,6 +28,7 @@ public class Block {
     long id;
     long nonce;
     long timestamp;
+    int difficulty;
     Set<Transaction> transactions;
     String previousPOW;
     String pow;
@@ -40,6 +41,7 @@ public class Block {
     public Block(Block previousBlock) {
 
         nonce = 0;
+        difficulty = 0;
         transactions = new HashSet<>();
         timestamp = Instant.now().toEpochMilli();
         pow = "";
@@ -61,7 +63,7 @@ public class Block {
         nonce++;
     }
 
-    public boolean prove(int difficulty) {
+    public boolean prove() {
 
         pow = hash();
         return verifyPOW(difficulty);

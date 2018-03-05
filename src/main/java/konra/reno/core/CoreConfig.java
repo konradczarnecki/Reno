@@ -12,5 +12,6 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public class CoreConfig {
 
     int maxTxsInPool;
+    int baseBlockTime;
     String mode;
 }
