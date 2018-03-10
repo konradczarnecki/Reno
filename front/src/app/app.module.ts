@@ -15,6 +15,7 @@ import {HttpClientModule} from '@angular/common/http';
 import {FormsModule} from "@angular/forms";
 import {MatButtonModule} from "@angular/material";
 import {MinerService} from "./service/miner.service";
+import { HashAnimationComponent } from './mine/hash-animation/hash-animation.component';
 
 export const routes: Routes = [
   { path : '', redirectTo : '/login' , pathMatch : 'full' },
@@ -33,7 +34,8 @@ export const routes: Routes = [
     AccountComponent,
     SendComponent,
     MineComponent,
-    ExploreComponent
+    ExploreComponent,
+    HashAnimationComponent
   ],
   imports: [
     BrowserModule,

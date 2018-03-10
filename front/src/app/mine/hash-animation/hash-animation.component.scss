@@ -1,0 +1,24 @@
+@import "../../common";
+
+#wrapper {
+  @include size100p;
+  @include grid-stretch(1fr, 1fr);
+  overflow: hidden;
+}
+
+canvas, #cover, #cover2 {
+  //@include size100p;
+  grid-row: 1;
+  grid-column: 1;
+}
+
+#cover {
+  z-index: 2;
+  background: linear-gradient(to right, white, rgba(255,255,255,0.8), transparent);
+}
+
+#cover2 {
+  z-index: 3;
+  height: 10%;
+  background: linear-gradient(to bottom, white, transparent);
+}

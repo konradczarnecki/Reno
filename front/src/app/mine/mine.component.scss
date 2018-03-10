@@ -7,6 +7,7 @@
 
 #minerBox {
   @include grid-stretch(1fr, 1fr 2fr);
+  grid-column-gap: 10px;
   @include font(55px, transparentize($font-clr, 0.2));
   padding: 30px;
 }
@@ -48,5 +49,9 @@
 #leftColumn {
   @include grid-center(60px 60px 1fr, 1fr);
 
+}
+
+#rightColumn {
+  @include size(95%);
 }
 

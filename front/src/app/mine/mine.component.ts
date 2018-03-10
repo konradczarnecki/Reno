@@ -1,9 +1,10 @@
-import {Component, OnDestroy, OnInit} from '@angular/core';
+import {Component, OnDestroy, OnInit, ViewChild} from '@angular/core';
 import {RestService} from "../service/rest.service";
 import {MinerStatus} from "../model";
 import {environment} from "../../environments/environment";
 import {AccountService} from "../service/account.service";
 import {MinerService} from "../service/miner.service";
+import {HashAnimationComponent} from "./hash-animation/hash-animation.component";
 
 @Component({
   selector: 'app-mine',
@@ -12,12 +13,15 @@ import {MinerService} from "../service/miner.service";
 })
 export class MineComponent implements OnInit {
 
+  @ViewChild(HashAnimationComponent) animation: HashAnimationComponent;
+
   constructor(private rest: RestService, private minerService: MinerService) { }
 
   ngOnInit() {}
 
   startMining() {
     this.minerService.startMining();
+    this.animation.startAnimation();
   }
 
   stopMining() {
